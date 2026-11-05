@@ -23,7 +23,7 @@ Key dependency constraints:
 
 A **Dockerfile** is provided: Ubuntu 24.04 base, installs pixi, copies `pixi.toml`, sets `TF_USE_LEGACY_KERAS=1`, entrypoint is `pixi run python run.py`.
 
-There is no Makefile, no CI/CD, and no tests. The source code is split across 6 files under the `cellsurvey/` package, with `run.py` as the entry-point shim.
+There is no Makefile, no CI/CD, and no tests. The source code is split across 7 modules under the `cellsurvey/` package, with `run.py` as the entry-point shim.
 
 **TODO**: Set up linting and formatting (Ruff, mypy) with a `pyproject.toml` config and pre-commit hooks.
 
@@ -102,6 +102,7 @@ All analysis parameters are exposed as command-line flags with sensible defaults
 | `-p`, `--plot_dir` | `.` | Output directory for plots |
 | `--detect-blobs` | — | Enable RNA spot blob detection on specified channels (default: off) |
 | `--use-gpu` | — | Force GPU usage for Stardist (auto-detected by default) |
+| `--cell-expansion` | `5.0` | Nucleus → whole-cell expansion distance in µm (watershed-capped; see Cell segmentation) |
 | `--channels` | `9,10,11,12` | Comma-separated channel indices for blob detection |
 | `--thresholds` | `0.01,0.1,0.1,0.1` | Comma-separated blob detection thresholds (one per channel) |
 | `--tile-size` | `2048` | Tile size for blob detection |
@@ -212,7 +213,7 @@ All analysis parameters are exposed as command-line flags with sensible defaults
 **Phase 3 — Consensus communities**: Hierarchical clustering on the co-occurrence matrix → final high-confidence niches. Export alongside per-cell confidence scores to GeoJSON.
 
 ### Implementation (Phase 1 done)
-New module `cellsurvey/stability.py` with `run_stability_sweep(sdata, resolutions, max_edge_distances)` returning a dict with `cell_ids`, `coords`, an `(n_cells, n_sweeps)` label matrix, and the `(resolution, max_edge_distance)` params. It reads an existing `_seg.zarr` **read-only** (never writes back), and `sweep_to_csv`/`sweep_summary` write per-cell labels and per-sweep community counts to CSVs. Standalone entry point: `python -m cellsurvey.stability --zarr <output>_seg.zarr --resolutions ... --max-edge-distances ...`.
+New module `cellsurvey/stability.py` with `run_stability_sweep(sdata, resolutions, max_edge_distances)` returning a dict with `cell_ids`, `coords`, an `(n_cells, n_sweeps)` label matrix, and the `(resolution, max_edge_distance)` params. It reads an existing `_seg.zarr` **read-only** (never writes back), and `sweep_to_csv`/`sweep_summary` write per-cell labels and per-sweep community counts to CSVs. A second sweep, `run_cluster_sweep(sdata, n_clusters_list)`, varies k-means `n_clusters` instead (with `cluster_sweep_to_csv`/`cluster_sweep_summary`). Standalone entry point, selected with `--mode`: `python -m cellsurvey.stability --zarr <output>_seg.zarr --mode communities --resolutions ... --max-edge-distances ...` (default mode) or `--mode clusters --n-clusters ...`.
 
 Phases 2–3 (stability metrics + consensus communities) are still TODO:
 - `run_stability_sweep` should gain co-occurrence, per-cell entropy, consensus labels, and confidence scores (the `(n_cells, n_sweeps)` matrix is the input to these).
@@ -340,7 +341,7 @@ Each table's `.obs` index is the same `cell_id`, so `table` and `nucleus` join c
 3. **`--cell-expansion` flag** — **done** (µm, default `5.0`).
 4. **Build & store `cell_boundaries`** — **done**: inserted after Stardist, before aggregation; `stardist_boundaries` kept.
 5. **Aggregate over cells** — **partially done**: `sopa.aggregate` now targets `cell_boundaries` → `table` (whole-cell). The separate `stardist_boundaries` → `nucleus` table is **pending**.
-6. **Thread region through downstream** — **done**: `export.py`, `assign_spots_to_cells`, `network_analysis.py`, and `stability.py` now default to / are passed `cell_boundaries`; cluster/community are mapped onto `stardist_boundaries` via `nucleus_id`. `--cluster-regions` not added (single whole-cell table for now).
+6. **Thread region through downstream** — **done**: `export.py`, `assign_spots_to_cells`, and `stability.py` now default to `cell_boundaries`; `run_network_analysis()` still defaults to `stardist_boundaries`, so `cli.py` passes the cell layer explicitly; cluster/community are mapped onto `stardist_boundaries` via `nucleus_id`. `--cluster-regions` not added (single whole-cell table for now).
 
 ### Future: Cellpose (proper cytoplasm segmentation)
 Integrate **Cellpose** for true whole-cell segmentation (cell + cytoplasm), replacing the nucleus-expansion approximation. Cellpose is the dominant pretrained whole-cell segmenter for fluorescent microscopy, and would also yield a genuine **cytoplasm** compartment (cell minus nucleus) — the piece this phase deliberately does not approximate. Note: Cellpose is PyTorch-based (see the TF/Torch co-existence note) — recommend a separate pixi environment or a deferred, opt-in `--segmenter cellpose` path. Recorded here for later; not in scope for the expansion work.
@@ -751,6 +752,7 @@ Ten tips spanning experimental design → platform selection → data structure 
 │   ├── __init__.py                   # Re-exports all public symbols
 │   ├── cli.py                        # main() with argparse and pipeline orchestration
 │   ├── blob_detection.py             # detect_blobs_in_tile, detect_blobs_tiled
+│   ├── segmentation.py               # get_pixel_size, expand_nuclei (marker-controlled watershed nucleus → cell expansion)
 │   ├── network_analysis.py           # run_network_analysis + compute_louvain_communities (scipy Delaunay + networkx Louvain, expr-similarity weights, summary.json)
 │   ├── stability.py                  # run_stability_sweep (community) + run_cluster_sweep (k-means), read-only → CSV
 │   ├── export.py                     # export_to_qupath
@@ -765,7 +767,7 @@ Ten tips spanning experimental design → platform selection → data structure 
 │   ├── visualization.md              # Odon / QuPath / TissUUmaps / napari
 │   └── faq.md                        # Question-phrased how-to + troubleshooting
 ├── Dockerfile                        # Ubuntu 24.04 + pixi + GPU-ready container
-├── pixi.toml                         # Pixi environment config (linux-64 only)
+├── pixi.toml                         # Pixi environment config (linux-64 GPU, win-64 CPU-only)
 ├── pixi.lock                         # Pixi lockfile (generated)
 ├── mkdocs.yml                        # MkDocs + Material config
 ├── .readthedocs.yaml                 # ReadTheDocs build config
