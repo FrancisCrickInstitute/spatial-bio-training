@@ -1,5 +1,62 @@
 # AGENTS.md
 
+## Current direction: restructuring into a training workshop
+
+**Status (2026-11-05): planned, not started.** This repo (a fork of [CellSurvey](https://github.com/FrancisCrickInstitute/CellSurvey)) is being turned into the material for a **two-day workshop on spatial biology/omics analysis**: Day 1 in QuPath, Day 2 in Python. It is modelled on [introduction-to-image-analysis](https://github.com/FrancisCrickInstitute/introduction-to-image-analysis). The full plan, with rationale, is in the shared doc [Spatial Biology Workshop Plan](https://claude.ai/artifact/CnmDq3CUzc3fMptRAinEtY). Everything below this section describes the CellSurvey pipeline as it stands today. It stays accurate until the teardown step removes that code.
+
+### Decisions made
+- **Keep this repo and its history.** No new repo.
+- **One dataset across both days.** The preferred dataset is the 10x **Xenium Protein FFPE human renal cell carcinoma** section: transcripts, a 27-plex protein panel and post-Xenium H&E, all on the same section. The fallback is BioImage Archive **S-BIAD1093** (Xenium + COMET IF, but no H&E). A cropped region is published on Zenodo as the workshop download.
+- **Day 1 = the existing one-day Introduction to QuPath course** (Sara Salgueiro Torres, CALM STP, QuPath v0.7; source material in `qupath_content/`), ported to the workshop dataset. **No Groovy scripting**: Python is the only scripting language taught. Session 4 becomes spatial analysis (density maps, distances, Delaunay) plus export for Day 2.
+- **InstanSeg on both days**: QuPath's InstanSeg extension on Day 1, and `sopa.segmentation.instanseg` (Sopa ≥ 2.3, `sopa[instanseg]`) on Day 2, using the same `fluorescence_nuclei_and_cells` model. Pass `pixel_size`, or it may return no cells. The workshop environment needs **no TensorFlow**.
+- **Notebooks only for Day 2.** The `cellsurvey/` code is removed from this repo, and session 8 points to the upstream CellSurvey repo as the "notebooks → pipeline" example.
+- **No bring-your-own-data session.** Applications capture participants' projects and goals. The workshop teaches tool choice and how to ask the right questions, not analysis of attendees' own data.
+- **Compute is still open.** The design assumes precomputed checkpoints (one SpatialData Zarr per notebook in the download), so most of Day 2 runs on modest hardware. Live segmentation runs on one small tile only.
+
+### Programme (4 sessions/day, 09:30–17:00)
+| Day 1 (QuPath) | Day 2 (Python) |
+|---|---|
+| 1. Images + spatial-biology primer | 5. Notebooks, SpatialData/AnnData, loading Xenium + H&E + Day 1 GeoJSON |
+| 2. H&E workflow (tissue, regions, cells) | 6. Segmentation (InstanSeg via Sopa) + QC (SegTraQ, vs Xenium segmentation) + aggregation |
+| 3. Multiplex IF workflow (InstanSeg, classifiers, phenotypes) | 7. Cell types (scanpy; compare with Day 1 phenotypes; RNA vs protein) |
+| 4. Spatial analysis + export | 8. Spatial stats/niches (squidpy, Delaunay + Louvain), back to QuPath, evaluating new tools |
+
+### What happens to each current file
+| Current | Fate |
+|---|---|
+| `cellsurvey/`, `run.py`, `Dockerfile` | Remove (code lives on upstream) |
+| `docs/`, `mkdocs.yml`, `.readthedocs.yaml`, `requirements-docs.txt` | Remove (README + `Pages/` replace them) |
+| `AGENTS.md`, `CLAUDE.md` | Rewrite as a short guide to the workshop repo |
+| `README.md` | Rewrite as the workshop page (overview, preparation, programme, slides link, FAQ) |
+| `pixi.toml`, `requirements.txt` | Rewrite: `sopa[instanseg]`, `spatialdata-io`, `squidpy`, `napari-spatialdata`, `jupyterlab`, SegTraQ |
+| `qupath_content/` (untracked) | Classifiers and class lists go into `qupath/`. **Never commit** the 80 MB slide deck (slides live on Google Drive) or the ~450 MB project `data/` folders (absolute paths from the author's machine; rebuilt on the RCC data) |
+
+### Target layout
+```
+README.md            workshop page
+Pages/               Installation-Instructions.md, Data.md, Day1/ (session guides), Day2/
+qupath/              Day 1 classifiers + class lists (the project itself ships in the data download)
+notebooks/           05_data_model_and_loading … 08_spatial_and_next_steps
+solutions/           completed notebooks with outputs
+Scripts/             prepare_data.py (download, crop, checkpoints), check_install.py
+assets/
+pixi.toml
+```
+
+### Order of work
+0. **Upstream first**: add InstanSeg (via `sopa.segmentation.instanseg`) to CellSurvey in the upstream repo, so the code session 8 points to matches what is taught.
+1. **Teardown**: remove the CellSurvey files, write a README skeleton, slim down `AGENTS.md`/`CLAUDE.md`.
+2. **Environment**: new `pixi.toml` and `check_install.py`, solved and tested on win-64 and linux-64.
+3. **Data**: `prepare_data.py`. Blocked on confirming the RCC licence and choosing the crop.
+4. **Day 2 notebooks**: 06 first (riskiest), then 05, 07, 08.
+5. **Day 1**: port the QuPath exercises to the RCC data and write the `Pages/Day1/` guides (QuPath GUI work, led by the instructors).
+
+### Open questions
+- Confirm the RCC dataset's licence (expected CC BY 4.0), file list, and that its protein panel can carry the Day 1 IF exercise (e.g. CD45, PD-1).
+- Can QuPath import Xenium transcripts and cell boundaries cleanly? This decides whether transcripts appear on Day 1.
+- Crop region and size; compute platform; cohort size and dates.
+- Source and sharing terms of the original liver `.vsi` and `LungImg1.ome.tif` course images.
+
 ## Project overview
 
 CellSurvey is a spatial biology/omics analysis pipeline built on [Sopa](https://gustaveroussy.github.io/sopa/) (segmentation, aggregation). It processes multichannel microscopy images (OME-TIFF) into spatial data objects, segments nuclei with Stardist, detects RNA spots via blob detection, clusters cells with k-means, builds Delaunay networks, detects Louvain communities, and exports GeoJSON for QuPath visualization.
