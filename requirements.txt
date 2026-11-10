@@ -1,1 +1,16 @@
-sopa
+# Day 2 workshop environment for pip users (Python 3.12).
+# pixi is the supported route: see pixi.toml, which this file mirrors. Keep the two in step.
+sopa[instanseg]>=2.3.0,<3
+spatialdata>=0.8.0
+spatialdata-io>=0.7
+spatialdata-plot>=0.4.0
+scanpy>=1.12
+squidpy>=1.8.3
+networkx>=3.4,<4
+python-igraph
+segtraq>=0.0.7
+napari[all]>=0.6
+napari-spatialdata>=0.7
+jupyterlab>=4
+ipykernel
+ipywidgets>=8

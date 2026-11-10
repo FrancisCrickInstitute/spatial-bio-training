@@ -6,7 +6,14 @@ The repo began as a fork of the [CellSurvey](https://github.com/FrancisCrickInst
 
 ## Status
 
-**2026-11-10: step 1 (teardown) in progress on branch `restructure/teardown`.** No notebooks, data scripts or new environment exist yet. `pixi.toml` and `requirements.txt` are still CellSurvey's (Stardist/TensorFlow) until step 2 rewrites them, so don't treat them as the workshop environment.
+**2026-11-10: steps 1 (teardown) and 2 (environment) done on branch `restructure/teardown`, not yet merged.** No notebooks or data scripts exist yet.
+
+The workshop environment is `pixi.toml` + `pixi.lock`, locked for linux-64, win-64 and osx-arm64. It uses Python 3.12, `sopa[instanseg]` 2.3, PyTorch, `spatialdata` 0.8, scanpy, squidpy, SegTraQ, napari (PyQt6) and JupyterLab, with no TensorFlow. Tasks:
+- `pixi run check` runs `Scripts/check_install.py`: imports, versions, compute device, Qt.
+- `pixi run check-full` also downloads the InstanSeg model and segments a synthetic image.
+- `pixi run lab` starts JupyterLab.
+
+`requirements.txt` mirrors the PyPI deps for pip users, so keep it in step with `pixi.toml`. Tested so far on win-64 only: all imports pass. The InstanSeg model download failed there with `CERTIFICATE_VERIFY_FAILED` (HTTPS interception on the maintainer's network). linux-64 and osx-arm64 are locked but untested.
 
 ## Working in this repo
 - **This is a training-workshop repo, not a software package.** There is no build, no tests and no CI. Day 2 material will be Jupyter notebooks, and nothing here is meant to be imported.
@@ -54,7 +61,7 @@ pixi.toml
 ## Order of work
 0. **Upstream first**: **done on `feature/instanseg`** in upstream CellSurvey (2026-11-10). Merge to upstream `main` is pending final tests. Adds `--segmenter instanseg`, requires `sopa>=2.3.0`, separates TensorFlow/Stardist and PyTorch/InstanSeg into separate pixi environments, and converts spatial distances to µm.
 1. **Teardown** (in progress): remove the CellSurvey files, write a README skeleton, slim down `AGENTS.md`/`CLAUDE.md`.
-2. **Environment**: new `pixi.toml` (`sopa[instanseg]`, `spatialdata-io`, `squidpy`, `napari-spatialdata`, `jupyterlab`, SegTraQ; no TensorFlow) and `Scripts/check_install.py`, solved and tested on win-64 and linux-64. Replace `requirements.txt` to match (or drop it if Binder isn't used).
+2. **Environment** (done, see Status): new `pixi.toml`/`pixi.lock`, `Scripts/check_install.py` and a matching `requirements.txt`. **Still to do:** run `pixi run check-full` on linux-64 and macOS, and confirm the InstanSeg model download works off the intercepting network. Participants on such networks need a documented workaround in `Pages/Installation-Instructions.md`.
 3. **Data**: `Scripts/prepare_data.py`. Blocked on confirming the RCC licence and choosing the crop.
 4. **Day 2 notebooks**: 06 first (riskiest), then 05, 07, 08.
 5. **Day 1**: port the QuPath exercises to the RCC data and write the `Pages/Day1/` guides (QuPath GUI work, led by the instructors).

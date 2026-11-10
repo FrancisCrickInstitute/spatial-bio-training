@@ -1,37 +1,42 @@
 [workspace]
 authors = ["Dave Barry <david.barry@crick.ac.uk>"]
 channels = ["conda-forge"]
-name = "CellSurvey"
-platforms = ["linux-64", "win-64"]
+name = "spatial-bio-training"
+description = "Python environment for Day 2 of the spatial biology workshop"
+# No TensorFlow, so macOS (Apple Silicon) works too. win-64 and osx-arm64 run
+# InstanSeg on CPU / Apple MPS; linux-64 picks up CUDA from the PyPI torch wheel.
+platforms = ["linux-64", "win-64", "osx-arm64"]
 version = "0.1.0"
 
 [tasks]
+check = { cmd = "python Scripts/check_install.py", description = "Check the workshop environment works" }
+check-full = { cmd = "python Scripts/check_install.py --full", description = "Also download the InstanSeg model and segment a test image" }
+lab = { cmd = "jupyter lab", description = "Start JupyterLab" }
 
 [dependencies]
-pixi-pycharm = ">=0.0.12,<0.0.13"
-
-[target.linux-64.dependencies]
-python = ">=3.12, <3.13"
-
-[target.win-64.dependencies]
-python = ">=3.12, <3.13"
-
-[environments]
-spatial = ["default"]
+python = ">=3.12,<3.13"
 
 [pypi-dependencies]
-stardist = ">=0.9.2, <0.10"
-sopa = ">=2.1.11, <3"
-bioio = ">=3.4.0, <4"
-bioio-ome-tiff = ">=1.4.0, <2"
-setuptools = ">=72.1.0,<82"
+# Reading, segmenting and aggregating spatial data (InstanSeg via Sopa; pulls in PyTorch)
+sopa = { version = ">=2.3.0,<3", extras = ["instanseg"] }
+spatialdata = ">=0.8.0"
+spatialdata-io = ">=0.7"
+spatialdata-plot = ">=0.4.0"
+
+# Single-cell and spatial analysis
+scanpy = ">=1.12"
+squidpy = ">=1.8.3"
+networkx = ">=3.4,<4"
 python-igraph = "*"
-tf_keras = "*"
-scipy = ">=1.14, <2"
-networkx = ">=3.4, <4"
 
-[target.linux-64.pypi-dependencies]
-tensorflow = { version = ">=2.18", extras = ["and-cuda"] }
+# Segmentation and transcript-assignment QC
+segtraq = ">=0.0.7"
 
-[target.win-64.pypi-dependencies]
-tensorflow = ">=2.18"
+# Interactive viewing
+napari = { version = ">=0.6", extras = ["all"] }
+napari-spatialdata = ">=0.7"
+
+# Notebooks
+jupyterlab = ">=4"
+ipykernel = "*"
+ipywidgets = ">=8"

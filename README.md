@@ -31,8 +31,9 @@ TBC
 
 Before the workshop:
 
-1. Install QuPath and the Python environment, following the [installation instructions](Pages/Installation-Instructions.md) (to be written).
-2. Download the workshop data (link to follow).
+1. Install QuPath and the Python environment, following the [installation instructions](Pages/Installation-Instructions.md) (to be written). The Python environment works on Windows, Linux and macOS (Apple Silicon).
+2. From the repository folder, check the Python environment with `pixi run check-full`. This also downloads the cell segmentation model, so run it with an internet connection and preferably off any VPN.
+3. Download the workshop data (link to follow).
 
 # Program
 
