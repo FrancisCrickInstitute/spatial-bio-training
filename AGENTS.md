@@ -2,7 +2,7 @@
 
 ## Current direction: restructuring into a training workshop
 
-**Status (2026-11-05): planned, not started.** This repo (a fork of [CellSurvey](https://github.com/FrancisCrickInstitute/CellSurvey)) is being turned into the material for a **two-day workshop on spatial biology/omics analysis**: Day 1 in QuPath, Day 2 in Python. It is modelled on [introduction-to-image-analysis](https://github.com/FrancisCrickInstitute/introduction-to-image-analysis). The full plan, with rationale, is in the shared doc [Spatial Biology Workshop Plan](https://claude.ai/artifact/CnmDq3CUzc3fMptRAinEtY). Everything below this section describes the CellSurvey pipeline as it stands today. It stays accurate until the teardown step removes that code.
+**Status (2026-11-10): step 0 done (upstream branch), step 1 not started.** This repo (a fork of [CellSurvey](https://github.com/FrancisCrickInstitute/CellSurvey)) is being turned into the material for a **two-day workshop on spatial biology/omics analysis**: Day 1 in QuPath, Day 2 in Python. It is modelled on [introduction-to-image-analysis](https://github.com/FrancisCrickInstitute/introduction-to-image-analysis). The full plan, with rationale, is in the shared doc [Spatial Biology Workshop Plan](https://claude.ai/artifact/CnmDq3CUzc3fMptRAinEtY). Everything below this section describes the CellSurvey pipeline as it stands today. It stays accurate until the teardown step removes that code.
 
 ### Decisions made
 - **Keep this repo and its history.** No new repo.
@@ -44,7 +44,7 @@ pixi.toml
 ```
 
 ### Order of work
-0. **Upstream first**: add InstanSeg (via `sopa.segmentation.instanseg`) to CellSurvey in the upstream repo, so the code session 8 points to matches what is taught.
+0. **Upstream first** — **done on `feature/instanseg`** in the upstream CellSurvey repo (2026-11-10); merge to upstream `main` is pending final tests. The branch adds `--segmenter instanseg` (via `sopa.segmentation.instanseg`, default model `fluorescence_nuclei_and_cells`) and requires `sopa>=2.3.0`. It puts TensorFlow/Stardist and PyTorch/InstanSeg in separate pixi environments (`pixi run -e instanseg …`), and converts spatial distance parameters to µm. The workshop notebooks should use µm too, so they match.
 1. **Teardown**: remove the CellSurvey files, write a README skeleton, slim down `AGENTS.md`/`CLAUDE.md`.
 2. **Environment**: new `pixi.toml` and `check_install.py`, solved and tested on win-64 and linux-64.
 3. **Data**: `prepare_data.py`. Blocked on confirming the RCC licence and choosing the crop.
