@@ -8,6 +8,12 @@ The repo began as a fork of the [CellSurvey](https://github.com/FrancisCrickInst
 
 **2026-11-10: step 1 (teardown) in progress on branch `restructure/teardown`.** No notebooks, data scripts or new environment exist yet. `pixi.toml` and `requirements.txt` are still CellSurvey's (Stardist/TensorFlow) until step 2 rewrites them, so don't treat them as the workshop environment.
 
+## Working in this repo
+- **This is a training-workshop repo, not a software package.** There is no build, no tests and no CI. Day 2 material will be Jupyter notebooks, and nothing here is meant to be imported.
+- **Don't restore the CellSurvey code.** Point to upstream [CellSurvey](https://github.com/FrancisCrickInstitute/CellSurvey) instead. An `upstream` git remote (SSH; HTTPS fails certificate checks on the maintainer's machine) may be configured for fetching it.
+- **Keep participant-facing text and the plan in step.** The programme in `README.md` mirrors the table below.
+- **The maintainer stages and commits.** Leave changes unstaged.
+
 ## Decisions made
 - **Keep this repo and its history.** No new repo.
 - **One dataset across both days.** The preferred dataset is the 10x **Xenium Protein FFPE human renal cell carcinoma** section: transcripts, a 27-plex protein panel and post-Xenium H&E, all on the same section. The fallback is BioImage Archive **S-BIAD1093** (Xenium + COMET IF, but no H&E). A cropped region is published on Zenodo as the workshop download.
@@ -25,8 +31,6 @@ The repo began as a fork of the [CellSurvey](https://github.com/FrancisCrickInst
 | 2. H&E workflow (tissue, regions, cells) | 6. Segmentation (InstanSeg via Sopa) + QC (SegTraQ, vs Xenium segmentation) + aggregation |
 | 3. Multiplex IF workflow (InstanSeg, classifiers, phenotypes) | 7. Cell types (scanpy; compare with Day 1 phenotypes; RNA vs protein) |
 | 4. Spatial analysis + export | 8. Spatial stats/niches (squidpy, Delaunay + Louvain), back to QuPath, evaluating new tools |
-
-The participant-facing version of this programme is in `README.md`. Keep the two in step.
 
 ## Target layout
 ```
