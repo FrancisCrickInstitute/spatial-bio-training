@@ -106,13 +106,19 @@ def make_test_image(size=256, pixel_size_um=0.5, seed=0):
             cells[dist < cell_radius] = 0.6
     image = np.stack([nuclei, cells], axis=-1)  # (Y, X, C)
     image += rng.normal(0, 0.05, image.shape).astype(np.float32)
-    n_expected = len(range(spacing // 2, size, spacing)) ** 2
-    return image, n_expected
+    return image
 
 
 def check_instanseg():
+    import warnings
+
     import numpy as np
     from instanseg import InstanSeg
+
+    # PyTorch/InstanSeg emit harmless deprecation and "no CUDA" warnings; hide them here
+    # so participants aren't alarmed. They still appear in the notebooks.
+    warnings.filterwarnings("ignore", category=FutureWarning)
+    warnings.filterwarnings("ignore", category=UserWarning)
 
     pixel_size_um = 0.5
     print("       Downloading/loading the InstanSeg model (first run only needs internet)...")
@@ -125,14 +131,14 @@ def check_instanseg():
             print("       Try again off the VPN or on another network, or ask the organisers for help.")
             return False
         raise
-    image, n_expected = make_test_image(pixel_size_um=pixel_size_um)
+    image = make_test_image(pixel_size_um=pixel_size_um)
     labels = model.eval_small_image(image, pixel_size=pixel_size_um, return_image_tensor=False)
     labels = np.asarray(labels.cpu()).squeeze()  # (2, Y, X): nuclei, cells
     counts = [len(np.unique(channel)) - 1 for channel in labels]
-    found = max(counts)
-    ok = found > 0
+    ok = max(counts) > 0
+    # Exact counts don't matter: this only checks the model loads and runs.
     print(f"{OK if ok else FAIL} InstanSeg segmented a test image: "
-          f"{counts[0]} nuclei, {counts[-1]} cells ({n_expected} drawn)")
+          f"{counts[0]} nuclei, {counts[-1]} cells")
     return ok
 
 
