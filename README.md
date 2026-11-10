@@ -1,108 +1,72 @@
-[![Documentation Status](https://readthedocs.org/projects/cell-survey/badge/?version=latest)](https://cell-survey.readthedocs.io/en/latest/) [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/) [![Built with Pixi](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/prefix-dev/pixi/main/assets/badge/v0.json)](https://pixi.sh) ![Commit activity](https://img.shields.io/github/commit-activity/y/FrancisCrickInstitute/CellSurvey?style=plastic) ![GitHub](https://img.shields.io/github/license/FrancisCrickInstitute/CellSurvey?color=green&style=plastic)
+[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/) [![Built with Pixi](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/prefix-dev/pixi/main/assets/badge/v0.json)](https://pixi.sh) ![GitHub](https://img.shields.io/github/license/FrancisCrickInstitute/spatial-bio-training?color=green&style=plastic)
+
+> [!NOTE]
+> This workshop is under development. Dates, registration and materials will be added here as they are finalised.
 
 # Overview
 
-CellSurvey is a Python pipeline for image-based spatial biology/omics analysis built on [Sopa](https://gustaveroussy.github.io/sopa/). It processes multichannel microscopy images (OME-TIFF) into spatial data objects, segments nuclei with Stardist, detects RNA spots via blob detection, clusters cells with k-means, builds Delaunay networks via scipy, detects Louvain communities via networkx, and exports GeoJSON for QuPath visualization.
+A two-day, hands-on workshop on analysing spatial biology data. **Day 1** uses [QuPath](https://qupath.github.io/) to explore, segment and classify cells interactively. **Day 2** rebuilds the same analysis in **Python**, then goes further with transcripts, segmentation quality control and spatial statistics.
 
-* Blampey, Q., Mulder, K., Gardet, M. et al. Sopa: a technology-invariant pipeline for analyses of image-based spatial omics. _Nat Commun_ 15, 4981 (2024).
+Both days use the same public tissue section, which has multiplex immunofluorescence (protein), H&E and in situ transcript data.
 
-<p align="center">
-  <img height="340" alt="cluster hex map" src="./assets/cluster_hexmap.png" /> <img height="340" alt="cluster profiles" src="./assets/populations_cluster_profile.png" />
-</p>
+By the end of the workshop you should be able to:
 
-# Documentation
+1. Explain how multiplex IF, H&E and in situ transcript data relate on one section, and what each can and can't tell you.
+2. Segment nuclei and cells, and measure per-cell marker intensities and transcript counts.
+3. Classify cells by marker thresholds (QuPath) and by unsupervised clustering (Python).
+4. Describe spatial organisation: neighbourhoods, cell–cell co-location, tissue niches.
+5. Move results between QuPath and Python, and judge which tool suits which question.
 
-Full documentation is available at **[cell-survey.readthedocs.io](https://cell-survey.readthedocs.io/en/latest/)** — installation, a pipeline walkthrough, every parameter, the outputs reference, the visualisation guide, and an FAQ.
+The workshop will not analyse your own data. Its aim is to give you enough grounding to choose the right tools for your data, and to ask the right questions when evaluating new ones.
 
-# Installation
+# Registration
 
-CellSurvey uses **pixi** for environment management targeting Linux (64-bit) with GPU support.
+Registration is by application and is not yet open. The application form asks about your research and what you hope to get from the workshop.
 
-> [!NOTE]
-> CellSurvey depends on TensorFlow and while TensorFlow will run on all operating systems, support for GPU processing is generally only supported on Linux ,  see [here](https://www.tensorflow.org/install) for more information. Windows and macOS are not supported via pixi.
+# Instructors
 
-## Pixi (recommended)
+TBC
 
-[Pixi](https://pixi.sh/latest/) manages the full environment including Python, CUDA, cuDNN, and all Python packages in a single command.
+# Preparation
 
-First, [install pixi](https://pixi.sh/latest/#installation) if you haven't already:
+Before the workshop:
 
-```bash
-curl -fsSL https://pixi.sh/install.sh | bash
-```
+1. Install QuPath and the Python environment, following the [installation instructions](Pages/Installation-Instructions.md) (to be written).
+2. Download the workshop data (link to follow).
 
-From the repository root:
+# Program
 
-```bash
-pixi install
-```
+## Day 1: spatial biology in QuPath
 
-That's it ,  pixi reads `pixi.toml` and sets up everything. To run:
+| Session | Topic |
+|---|---|
+| 1 | Digital images and an introduction to spatial biology |
+| 2 | H&E workflow: tissue detection, region classification, cell detection |
+| 3 | Multiplex IF workflow: cell segmentation with InstanSeg, cell classification, phenotypes |
+| 4 | Spatial analysis in QuPath, and exporting results for Day 2 |
 
-```bash
-pixi run python run.py -i <input_tiff> -o <output_zarr> -p <plot_dir>
-```
+## Day 2: spatial omics in Python
 
-## Docker
+| Session | Topic |
+|---|---|
+| 5 | Jupyter notebooks, the SpatialData data model, loading the data |
+| 6 | Cell segmentation and quality control |
+| 7 | Cell types: clustering and comparison with Day 1 |
+| 8 | Spatial statistics and niches, and where to go next |
 
-```bash
-docker build -t cellsurvey .
-docker run --gpus all -v /path/to/data:/data cellsurvey -i /data/input.tiff -o /data/output -p /data/plots
-```
+# Venue
 
-# Usage
+TBC
 
-## Basic Usage
+# Slides
 
-```bash
-pixi run python run.py -i <path_to_input_file> -o <path_to_output_zarr> -p <path_to_output_plots_directory>
-```
+TBC
 
-## Parameters
+# Additional material
 
-A full reference of every flag, with tuning guidance, is in the
-[Parameters](https://cell-survey.readthedocs.io/en/latest/parameters/) page. The
-three required arguments are:
+- [CellSurvey](https://github.com/FrancisCrickInstitute/CellSurvey): a pipeline that runs the Day 2 analysis end to end, built on [Sopa](https://gustaveroussy.github.io/sopa/).
+- [Introduction to image analysis](https://github.com/FrancisCrickInstitute/introduction-to-image-analysis): our general image-analysis workshop.
 
-* `-i`, `--input_file`: Path to the input multichannel TIFF image (OME-TIFF recommended).
-* `-o`, `--output_file`: Path for the output Zarr (`.zarr` appended automatically).
-* `-p`, `--plot_dir`: Directory where output plots are saved.
+# FAQ
 
-## Full Example
-
-```bash
-pixi run python run.py -i ~/data/sample.tiff -o ~/results/output -p ~/results/plots/
-```
-
-## Stability sweep
-
-To explore how clustering responds to its parameters without re-running the
-expensive segmentation, use the read-only sweep over an existing segmented Zarr.
-Results are written to CSVs in the same directory as the Zarr.
-
-Sweep the Louvain resolution (and Delaunay edge distance) for communities:
-
-```bash
-pixi run python -m cellsurvey.stability \
-  --zarr <output>_seg.zarr \
-  --resolutions 0.1,0.05,0.02,0.01 \
-  --max-edge-distances 1000
-```
-
-Or sweep the k-means `k` (defaults to `5,8,10,12,15,20`):
-
-```bash
-pixi run python -m cellsurvey.stability \
-  --zarr <output>_seg.zarr \
-  --mode clusters
-```
-
-Each writes per-cell labels (plus a summary CSV with the community count, or the
-k-means inertia) and leaves the Zarr untouched.
-
-# Visualising Results
-
-For the full visualisation guide — Odon (recommended), QuPath, TissUUmaps, and
-napari + napari-spatialdata, with performance notes — see the
-[Visualising results](https://cell-survey.readthedocs.io/en/latest/visualization/)
-page.
+TBC

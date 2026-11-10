@@ -10,3 +10,19 @@ __pycache__/
 # Runtime outputs
 outputs/
 test_data/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Workshop data (downloaded, never committed)
+data/
+*.zarr/
+
+# Original QuPath course material: large slides and projects with absolute paths.
+# Copy classifiers/class lists into qupath/ instead.
+qupath_content/
+*.pptx
+
+# QuPath project data (rebuilt from the data download)
+qupath/**/data/
+*.qpproj.backup
