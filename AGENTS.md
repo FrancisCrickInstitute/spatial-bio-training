@@ -13,7 +13,7 @@ The workshop environment is `pixi.toml` + `pixi.lock`, locked for linux-64, win-
 - `pixi run check-full` also downloads the InstanSeg model and segments a synthetic image.
 - `pixi run lab` starts JupyterLab.
 
-`requirements.txt` mirrors the PyPI deps for pip users, so keep it in step with `pixi.toml`. `pixi run check-full` passes on win-64 (CPU) and on linux-64 (CUDA, NVIDIA A100 on the Crick HPC, 2026-11-11), including the InstanSeg model download. osx-arm64 is locked but untested. On the HPC, pixi warns that its cache is on a network filesystem and redirects it to `/tmp`. This is harmless. On networks or VPNs that intercept HTTPS, pixi and the InstanSeg model download can fail with certificate errors (`UnknownIssuer` / `CERTIFICATE_VERIFY_FAILED`). The installation instructions should cover this.
+`requirements.txt` mirrors the PyPI deps for pip users, so keep it in step with `pixi.toml`. `pixi run check-full` passes on win-64 (CPU) and on linux-64 (CUDA, NVIDIA A100 on the Crick HPC, 2026-11-11), including the InstanSeg model download. osx-arm64 is locked but untested. On the HPC, pixi warns that its cache is on a network filesystem and redirects it to `/tmp`. This is harmless. On networks or VPNs that intercept HTTPS, pixi and the InstanSeg model download can fail with certificate errors (`UnknownIssuer` / `CERTIFICATE_VERIFY_FAILED`). `Pages/Installation-Instructions.md` covers this.
 
 ## Working in this repo
 - **This is a training-workshop repo, not a software package.** There is no build, no tests and no CI. Day 2 material will be Jupyter notebooks, and nothing here is meant to be imported.
@@ -61,7 +61,7 @@ pixi.toml
 ## Order of work
 0. **Upstream first**: **done on `feature/instanseg`** in upstream CellSurvey (2026-11-10). Merge to upstream `main` is pending final tests. Adds `--segmenter instanseg`, requires `sopa>=2.3.0`, separates TensorFlow/Stardist and PyTorch/InstanSeg into separate pixi environments, and converts spatial distances to µm.
 1. **Teardown** (in progress): remove the CellSurvey files, write a README skeleton, slim down `AGENTS.md`/`CLAUDE.md`.
-2. **Environment** (done, see Status): new `pixi.toml`/`pixi.lock`, `Scripts/check_install.py` and a matching `requirements.txt`. **Still to do:** run `pixi run check-full` on macOS, and document the certificate-error workaround (VPN off, or a different network) in `Pages/Installation-Instructions.md`.
+2. **Environment** (done, see Status): new `pixi.toml`/`pixi.lock`, `Scripts/check_install.py`, a matching `requirements.txt`, and `Pages/Installation-Instructions.md` (QuPath + extensions, pixi, `check-full`, troubleshooting including the certificate errors). `pixi.lock` is format v7, so participants need pixi ≥ 0.68. **Still to do:** run `pixi run check-full` on macOS, and fill in the organisers' contact details and the data link on the installation page.
 3. **Data**: `Scripts/prepare_data.py`. Blocked on confirming the RCC licence and choosing the crop.
 4. **Day 2 notebooks**: 06 first (riskiest), then 05, 07, 08.
 5. **Day 1**: port the QuPath exercises to the RCC data and write the `Pages/Day1/` guides (QuPath GUI work, led by the instructors).
