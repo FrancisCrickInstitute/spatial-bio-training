@@ -6,7 +6,7 @@ The repo began as a fork of the [CellSurvey](https://github.com/FrancisCrickInst
 
 ## Status
 
-**2026-11-10: steps 1 (teardown) and 2 (environment) done on branch `restructure/teardown`, not yet merged.** No notebooks or data scripts exist yet.
+**2026-11-11: steps 1 (teardown) and 2 (environment) done and merged into `main`.** No notebooks or data scripts exist yet.
 
 The workshop environment is `pixi.toml` + `pixi.lock`, locked for linux-64, win-64 and osx-arm64. It uses Python 3.12, `sopa[instanseg]` 2.3, PyTorch, `spatialdata` 0.8, scanpy, squidpy, SegTraQ, napari (PyQt6) and JupyterLab, with no TensorFlow. Tasks:
 - `pixi run check` runs `Scripts/check_install.py`: imports, versions, compute device, Qt.
@@ -60,7 +60,7 @@ pixi.toml
 
 ## Order of work
 0. **Upstream first**: **done on `feature/instanseg`** in upstream CellSurvey (2026-11-10). Merge to upstream `main` is pending final tests. Adds `--segmenter instanseg`, requires `sopa>=2.3.0`, separates TensorFlow/Stardist and PyTorch/InstanSeg into separate pixi environments, and converts spatial distances to µm.
-1. **Teardown** (in progress): remove the CellSurvey files, write a README skeleton, slim down `AGENTS.md`/`CLAUDE.md`.
+1. **Teardown** (done): remove the CellSurvey files, write a README skeleton, slim down `AGENTS.md`/`CLAUDE.md`.
 2. **Environment** (done, see Status): new `pixi.toml`/`pixi.lock`, `Scripts/check_install.py`, a matching `requirements.txt`, and `Pages/Installation-Instructions.md` (QuPath + extensions, pixi, `check-full`, troubleshooting including the certificate errors). `pixi.lock` is format v7, so participants need pixi ≥ 0.68. **Still to do:** run `pixi run check-full` on macOS, and fill in the organisers' contact details and the data link on the installation page.
 3. **Data**: `Scripts/prepare_data.py`. Blocked on confirming the RCC licence and choosing the crop.
 4. **Day 2 notebooks**: 06 first (riskiest), then 05, 07, 08.
