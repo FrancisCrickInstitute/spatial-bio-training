@@ -7,6 +7,8 @@ description = "Python environment for Day 2 of the spatial biology workshop"
 # InstanSeg on CPU / Apple MPS; linux-64 picks up CUDA from the PyPI torch wheel.
 platforms = ["linux-64", "win-64", "osx-arm64"]
 version = "0.1.0"
+# pixi.lock uses lock-file format v7, which older pixi cannot read.
+requires-pixi = ">=0.68"
 
 [tasks]
 check = { cmd = "python Scripts/check_install.py", description = "Check the workshop environment works" }
