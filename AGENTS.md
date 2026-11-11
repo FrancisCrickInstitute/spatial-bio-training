@@ -23,7 +23,7 @@ The workshop environment is `pixi.toml` + `pixi.lock`, locked for linux-64, win-
 
 ## Decisions made
 - **Keep this repo and its history.** No new repo.
-- **One dataset across both days.** The preferred dataset is the 10x **Xenium Protein FFPE human renal cell carcinoma** section: transcripts, a 27-plex protein panel and post-Xenium H&E, all on the same section. The fallback is BioImage Archive **S-BIAD1093** (Xenium + COMET IF, but no H&E). A cropped region is published on Zenodo as the workshop download.
+- **One dataset across both days.** The preferred dataset is the 10x **Xenium Protein FFPE human renal cell carcinoma** (RCC) section: transcripts, a 27-plex protein panel and post-Xenium H&E, all on the same section. Desk research on 2026-11-11 found it suitable (see Dataset below), pending two hands-on tests. The fallback is BioImage Archive **S-BIAD1093** (Xenium + COMET IF, but no H&E). A cropped region is published on Zenodo as the workshop download.
 - **Day 1 = the existing one-day Introduction to QuPath course** (Sara Salgueiro Torres, CALM STP, QuPath v0.7; source material in `qupath_content/`), ported to the workshop dataset. **No Groovy scripting**: Python is the only scripting language taught. Session 4 becomes spatial analysis (density maps, distances, Delaunay) plus export for Day 2.
 - **InstanSeg on both days**: QuPath's InstanSeg extension on Day 1, and `sopa.segmentation.instanseg` (Sopa ≥ 2.3, `sopa[instanseg]`) on Day 2, using the same `fluorescence_nuclei_and_cells` model. Pass `pixel_size`, or it may return no cells. The workshop environment needs **no TensorFlow**.
 - **Notebooks only for Day 2.** Session 8 points to upstream CellSurvey as the "notebooks → pipeline" example.
@@ -38,6 +38,34 @@ The workshop environment is `pixi.toml` + `pixi.lock`, locked for linux-64, win-
 | 2. H&E workflow (tissue, regions, cells) | 6. Segmentation (InstanSeg via Sopa) + QC (SegTraQ, vs Xenium segmentation) + aggregation |
 | 3. Multiplex IF workflow (InstanSeg, classifiers, phenotypes) | 7. Cell types (scanpy; compare with Day 1 phenotypes; RNA vs protein) |
 | 4. Spatial analysis + export | 8. Spatial stats/niches (squidpy, Delaunay + Louvain), back to QuPath, evaluating new tools |
+
+## Dataset: 10x Xenium Protein FFPE human RCC (researched 2026-11-11)
+[Dataset page](https://www.10xgenomics.com/datasets/xenium-protein-ffpe-human-renal-carcinoma). The page title is "Xenium In Situ Gene and Protein Expression data for FFPE Human Renal Cell Carcinoma". It was analysed with Xenium Onboard Analysis (XOA) v4.0 and last replaced on 2025-09-25. Don't confuse it with the separate 10x ccRCC protein dataset (`xenium-protein-ffpe-human-renal-ccrcc`), which hasn't been checked.
+
+- **Licence: CC BY 4.0**, stated on the page. Redistributing a crop on Zenodo is fine with attribution (follow 10x's citation guidelines).
+- **Sample:** FFPE RCC, stage III (T3a N1 MX), from Discovery Life Sciences. It has 465,534 cells over 66 mm² (about 7,000 cells/mm²) and a median of 70 transcripts per cell.
+- **RNA:** the 377-gene Xenium Human Multi-Tissue and Cancer panel plus 28 custom genes.
+- **Protein:** the 27-plex Cell Typing & Functional State Marker Set. Each marker is a separate OME-TIFF in `morphology_focus/` (35 files including DAPI, the segmentation stains and background channels).
+  - Immune cells: CD3E, CD4, CD8A, CD20, CD138, HLA-DR, CD11c, CD68, CD16, Granzyme B, CD163.
+  - Immune checkpoints: PD-1, PD-L1, VISTA, LAG-3.
+  - Proliferation and differentiation: Ki-67, PCNA, CD45RA, CD45RO.
+  - Tumour: PanCK, β-catenin, PTEN, CD31.
+  - Segmentation stains, also as separate channels: CD45, E-cadherin, Vimentin, αSMA.
+  - This is enough for the Day 1 IF exercise (T-cell subsets, macrophages, PD-1/PD-L1, tumour vs stroma).
+- **XOA 4.0 adds a fixed +100 offset to protein pixel values** instead of allowing negative values after background subtraction. Account for it when measuring intensities.
+- **Downloads.** All are on `cf.10xgenomics.com/samples/xenium/4.0.0/Xenium_V1_Human_Kidney_FFPE_Protein_updated/`, named `Xenium_V1_Human_Kidney_FFPE_Protein_updated_<suffix>`. Sizes were checked on 2026-11-11.
+  - `outs.zip` (**36.1 GB**) is the full bundle and the one `prepare_data.py` needs. It contains `morphology_focus/`, `morphology.ome.tif`, `transcripts.parquet`, `cells.parquet`, `cell_boundaries.parquet`, `nucleus_boundaries.parquet`, `cell_feature_matrix.h5`, `protein_panel.json`, `gene_panel.json`, `experiment.xenium` and the zarr.zip files.
+  - `xe_outs.zip` (19.3 GB) is the Xenium Explorer subset. It has no parquet files, so it isn't enough for Day 2.
+  - `he_image.ome.tif` (3.7 GB) is the post-Xenium H&E. `he_imagealignment.csv` is a 3×3 affine from the H&E into Xenium coordinates (roughly a 90° rotation plus scaling).
+  - `annotation.geojson` holds pathology annotations, **already in QuPath format and aligned to the H&E**. It has 9 regions: Tumor ×3, Immune infiltration ×2, Necrosis, Blood vessels, Hemorrhage and Adipose tissue. It is a reference for Day 1 session 2 and a guide for choosing the crop.
+  - The page also offers a supplemental `cell_groups.csv` (10x's cell groupings), a possible comparison for session 7.
+- **Fetching with curl:** use an explicit byte range (`-r start-end`). The CDN ignored a suffix range (`-r -N`) on `outs.zip` and started sending the whole 36 GB. The 10x dataset pages rate-limit automated fetches (HTTP 429), and they load with browser-like request headers.
+- **QuPath and Xenium:**
+  - Images: 10x documents that opening `morphology_focus/ch0000_dapi.ome.tif` in QuPath loads every channel in that folder.
+  - Cell boundaries: there is no built-in importer. `prepare_data.py` should convert the cropped `cell_boundaries.parquet` to QuPath GeoJSON (µm → pixels).
+  - Transcripts: there is no supported route, only community scripts and an open request on [uw-loci/qupath-extension-cell-analysis-tools#25](https://github.com/uw-loci/qupath-extension-cell-analysis-tools/issues/25). Large GeoJSON files strain QuPath's importer.
+  - **Recommendation (not yet decided):** transcripts on Day 2 only, with at most a small points GeoJSON as a Day 1 demonstration.
+- **Crop size:** at about 7,000 cells/mm², a 1.5 × 1.5 mm crop gives roughly 16,000 cells. Choose it from the H&E plus the pathology annotations, so it includes tumour, immune infiltration and stroma. The 36 GB bundle should be downloaded on the HPC; participants only download the Zenodo crop.
 
 ## Target layout
 ```
@@ -62,12 +90,17 @@ pixi.toml
 0. **Upstream first**: **done on `feature/instanseg`** in upstream CellSurvey (2026-11-10). Merge to upstream `main` is pending final tests. Adds `--segmenter instanseg`, requires `sopa>=2.3.0`, separates TensorFlow/Stardist and PyTorch/InstanSeg into separate pixi environments, and converts spatial distances to µm.
 1. **Teardown** (done): remove the CellSurvey files, write a README skeleton, slim down `AGENTS.md`/`CLAUDE.md`.
 2. **Environment** (done, see Status): new `pixi.toml`/`pixi.lock`, `Scripts/check_install.py`, a matching `requirements.txt`, and `Pages/Installation-Instructions.md` (QuPath + extensions, pixi, `check-full`, troubleshooting including the certificate errors). `pixi.lock` is format v7, so participants need pixi ≥ 0.68. **Still to do:** run `pixi run check-full` on macOS, and fill in the organisers' contact details and the data link on the installation page.
-3. **Data**: `Scripts/prepare_data.py`. Blocked on confirming the RCC licence and choosing the crop.
+3. **Data**: `Scripts/prepare_data.py`. The licence and file list are confirmed (see Dataset). Next: download the full bundle on the HPC, run the two hands-on tests (see Open questions), then choose the crop.
 4. **Day 2 notebooks**: 06 first (riskiest), then 05, 07, 08.
 5. **Day 1**: port the QuPath exercises to the RCC data and write the `Pages/Day1/` guides (QuPath GUI work, led by the instructors).
 
 ## Open questions
-- Confirm the RCC dataset's licence (expected CC BY 4.0), file list, and that its protein panel can carry the Day 1 IF exercise (e.g. CD45, PD-1).
-- Can QuPath import Xenium transcripts and cell boundaries cleanly? This decides whether transcripts appear on Day 1.
-- Crop region and size; compute platform; cohort size and dates.
+- **Test:** does `spatialdata_io.xenium` (0.7.1) read all 35 per-channel protein images from XOA 4.0's `morphology_focus/`? Its documentation doesn't say.
+  - **If it doesn't, keep `spatialdata_io.xenium` for everything except the images, and read the images with bioio.** spatialdata-io also reads the transcripts (points), cell and nucleus boundaries (shapes) and the cell-by-feature table, puts them in one µm coordinate system, and loads the H&E with `xenium_aligned_image`. Reimplementing that would be more work than the image step.
+  - How: call `spatialdata_io.xenium(..., morphology_focus=False, morphology_mip=False)`. Then read the 35 `morphology_focus/` files with bioio (or plain `tifffile`), stack them with channel names taken from the file names, and add them with `Image2DModel.parse`. Give it a 0.2125 µm/px scale transform (check the bundle's `experiment.xenium`) so it lines up with the µm-space elements, plus multiscale levels for a pyramid. bioio and bioio-ome-tiff would need adding to `pixi.toml` and `requirements.txt`.
+  - This only affects `prepare_data.py`: participants open the cropped SpatialData Zarr checkpoints with `spatialdata.read_zarr`, not raw Xenium output. Building the image layer by hand could even be shown in session 5, since it makes SpatialData elements and transforms explicit.
+  - The +100 protein offset needs handling with either reader.
+- **Test:** does QuPath 0.7 load all 35 channels from `ch0000_dapi.ome.tif`, and stay responsive on the crop?
+- Transcripts on Day 1: decide whether to adopt the Day 2-only recommendation in Dataset.
+- Crop region (size suggested in Dataset); compute platform; cohort size and dates.
 - Source and sharing terms of the original liver `.vsi` and `LungImg1.ome.tif` course images.
