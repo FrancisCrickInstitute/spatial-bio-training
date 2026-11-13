@@ -308,10 +308,13 @@ def inspect_annotations(data_dir):
     features = data["features"] if isinstance(data, dict) else data
     classes = {}
     for feature in features:
+        # 10x's file is inconsistent: some annotations have only a `name`, and one has a
+        # classification that differs from its name. Report both.
         props = feature.get("properties", {})
-        cls = props.get("classification", {})
-        name = cls.get("name") if isinstance(cls, dict) else props.get("name", "unnamed")
-        classes[name] = classes.get(name, 0) + 1
+        cls = props.get("classification")
+        cls_name = cls.get("name") if isinstance(cls, dict) else None
+        label = props.get("name", "unnamed") + (f" (class: {cls_name})" if cls_name != props.get("name") else "")
+        classes[label] = classes.get(label, 0) + 1
     print(f"  {len(features)} annotations: {classes}")
     report["annotations"] = classes
 

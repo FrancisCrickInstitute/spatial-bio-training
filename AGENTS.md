@@ -93,7 +93,7 @@ pixi.toml
 3. **Data**: `Scripts/prepare_data.py`. The licence and file list are confirmed (see Dataset).
    - Next: run `Scripts/inspect_xenium.py` on the HPC, then the QuPath test (see Open questions), then choose the crop.
    - `Scripts/inspect_xenium.py --data-dir <dir> [--with-he]` is a maintainer-only script, written 2026-11-13. It downloads `outs.zip` and the small files, resuming if interrupted, then extracts them. It reports what `experiment.xenium` and the panels contain, and reads each `morphology_focus/` file directly with tifffile (shape, dtype, value percentiles, so the +100 offset is visible). It then runs test 1 with `spatialdata_io.xenium` and writes `inspection_report.json`.
-   - Tested offline on a fake XOA 4.0 folder only. The download and the full spatialdata-io read are untested.
+   - Ran successfully on the HPC on 2026-11-13. The data and `inspection_report.json` are in `/nemo/stp/lm/working/barryd/hpc/projects/stps/lm/spatial-bio-training/10x_xenium_data` (`Z:\working\...` from Windows). Findings are under Open questions.
 4. **Day 2 notebooks**: 06 first (riskiest), then 05, 07, 08.
 5. **Day 1**: port the QuPath exercises to the RCC data and write the `Pages/Day1/` guides (QuPath GUI work, led by the instructors).
 
@@ -104,7 +104,17 @@ pixi.toml
   - The `global` coordinate system is in **pixels**. Points and shapes are stored in µm, with a `Scale(1/0.2125)` transform. Notebooks that work in µm need to set that up explicitly.
   - With labels skipped, spatialdata warns that the table annotates `cell_labels`, which isn't present. `prepare_data.py` should re-point the table at `cell_boundaries` (its region and instance key).
 - **Protein and gene names clash.** Some protein features share names with genes (e.g. CD4), so the table's `var_names` aren't unique. Name-based indexing fails (`InvalidIndexError`). `prepare_data.py` must make them unique, e.g. a `_protein` suffix, or split protein into its own table. Notebooks can then index by name.
-- **Check: transcript count.** The SpatialData printout gave 847,626,296 transcripts for a parquet file of 77,056,936 rows, exactly 11×. `inspect_xenium.py` now counts the rows exactly. If it really is 11×, spatialdata-io is duplicating partitions. `prepare_data.py` can avoid the issue either way by filtering `transcripts.parquet` to the crop with pyarrow before building the points.
+  - The 9 clashes are CD163, CD3E, CD4, CD45RA, CD45RO, CD68, CD8A, PCNA and PTEN.
+- **Transcript count is fine.** The SpatialData printout claims 847,626,296 (11 × the parquet rows, matching its 11 partitions), but the exact count is 77,056,936, the same as `transcripts.parquet`. Ignore the printout. Filtering `transcripts.parquet` to the crop with pyarrow is still the efficient way for `prepare_data.py` to build the points.
+- **The +100 offset is only on the 27 protein channels** (`ch0008`–`ch0034`, median about 99–119 at the coarsest level).
+  - DAPI, 18S, the three combined segmentation-stain channels (`ch0001`–`ch0003`) and the four colour backgrounds have no offset.
+  - Every channel has 0 outside the imaged region, so subtract as `clip(x - 100, 0)` on protein channels only.
+  - The cell table's protein values are already offset-free and unscaled: min 0, median 0, max 1055.5 with `gex_only=False`.
+- **H&E:** `xenium_aligned_image` returns a single unpyramided 3 × 60680 × 24096 RGB array in one 4.4 GB chunk (spatialdata warns). `prepare_data.py` should pass `image_models_kwargs` with `chunks` and `scale_factors`.
+  - `he_imagealignment.csv` maps H&E pixels to Xenium pixels: a 90° rotation and ×1.2896 scale, so an H&E pixel is about 0.274 µm. Translation is (−11896, 28914).
+- **`annotation.geojson` coordinates are in H&E pixels.** Its 9 polygons are Tumor ×3, Necrosis, Immune infiltration ×2, Hemorrhage, Adipose tissue and Blood vessels.
+  - 5 of the 9 have only a `name` and no `classification`, and one "Immune infiltration" is classified "Immune cells". `prepare_data.py` should set each classification from its name for QuPath.
+- `protein_panel.json` lists 28 targets under `payload.panel.targets`, against `num_targets: 27`. The gene panel's `payload.targets` has 465 entries.
 - **Original test question:** does `spatialdata_io.xenium` (0.7.1) read all 35 per-channel protein images from XOA 4.0's `morphology_focus/`? Its documentation doesn't say, but its source has an explicit XOA v4 path. That path takes channel names from the OME-XML in `ch0000_dapi.ome.tif` and loads the `chNNNN_*.ome.tif` files as one multichannel image, so it will probably pass. `Scripts/inspect_xenium.py` checks it on the real files.
   - **Always pass `gex_only=False`.** The default (`True`) drops the Protein Expression features from the cell table. With `False`, spatialdata-io keeps them and undoes 10x's fixed-point scaling of protein values in `cell_feature_matrix.h5`. That is separate from the +100 offset in the images.
   - **If it doesn't, keep `spatialdata_io.xenium` for everything except the images, and read the images with bioio.** spatialdata-io also reads the transcripts (points), cell and nucleus boundaries (shapes) and the cell-by-feature table, puts them in one µm coordinate system, and loads the H&E with `xenium_aligned_image`. Reimplementing that would be more work than the image step.
