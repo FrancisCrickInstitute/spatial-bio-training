@@ -121,7 +121,14 @@ pixi.toml
 1. **Teardown** (done): remove the CellSurvey files, write a README skeleton, slim down `AGENTS.md`/`CLAUDE.md`.
 2. **Environment** (done, see Status): new `pixi.toml`/`pixi.lock`, `Scripts/check_install.py`, a matching `requirements.txt`, and `Pages/Installation-Instructions.md` (QuPath + extensions, pixi, `check-full`, troubleshooting including the certificate errors). `pixi.lock` is format v7, so participants need pixi ≥ 0.68. **Still to do:** run `pixi run check-full` on macOS, and fill in the organisers' contact details and the data link on the installation page.
 3. **Data**: build the cropped SpatialData/Sopa-ready Zarr and the Day 1 QuPath files (see Decisions), via the preparation notebook (or `prepare_data.py`). The licence and file list are confirmed (see Dataset).
-   - QuPath loading is confirmed and the crop is chosen (candidate 1; see Open questions). Next: the preparation notebook.
+   - QuPath loading is confirmed and the crop is chosen (candidate 1; see Open questions).
+   - `notebooks/extra/prepare_xenium_dataset.ipynb` was written on 2026-11-13. Run it headless with `XENIUM_RAW_DIR`, `XENIUM_OUTPUT_DIR`, `XENIUM_DOWNLOAD=0/1`, `XENIUM_CROP=full|x0,y0,x1,y1` and `XENIUM_VALIDATE`/`XENIUM_ZIP`. Relative folders count from the repo root, because nbconvert runs kernels in `notebooks/extra/`.
+     - Every step after reading has been checked on a small synthetic Xenium-like dataset: protein offset, H&E resampling, annotation transform, table links, OME-TIFF pyramids and Plane positions, and the zips.
+     - The InstanSeg path of the Sopa check also runs.
+     - The full run on the real data, on the HPC, is in progress.
+   - **Gotchas found:**
+     - Cropped copies of spatialdata-io GeoDataFrames and DataFrames keep the old transforms in `.attrs`, so clear them before `ShapesModel`/`PointsModel.parse` with new transforms.
+     - `sopa.aggregate` writes to `table` by default, which would overwrite 10x's gene table. In session 6 pass `key_added` and `image_key="morphology_focus"`.
    - Then write the preparation notebook. Develop it against the crop and run it headless on the HPC to build the Zenodo bundle. Check that the Zarr round-trips through `spatialdata.read_zarr` and a small `sopa.make_image_patches` + `sopa.segmentation.instanseg` run.
    - `Scripts/inspect_xenium.py --data-dir <dir> [--with-he]` is a maintainer-only script, written 2026-11-13. It downloads `outs.zip` and the small files, resuming if interrupted, then extracts them. It reports what `experiment.xenium` and the panels contain, and reads each `morphology_focus/` file directly with tifffile (shape, dtype, value percentiles, so the +100 offset is visible). It then runs test 1 with `spatialdata_io.xenium` and writes `inspection_report.json`.
    - Ran successfully on the HPC on 2026-11-13. The data and `inspection_report.json` are in `/nemo/stp/lm/working/barryd/hpc/projects/stps/lm/spatial-bio-training/10x_xenium_data` (`Z:\working\...` from Windows). Findings are under Open questions.
