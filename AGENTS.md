@@ -134,6 +134,11 @@ pixi.toml
   - **Candidate 2:** x 0–7059, y 0–7059, the top-left corner. Tumour 32%, immune 51%, unannotated 18%, 19,934 cells.
   - Both lie along the top edge, where the first Immune infiltration region borders the main Tumor region.
   - `annotations_xenium_px_with_crop_candidates.geojson` (in the HPC data folder) holds the transformed annotations, clipped to the image, plus the candidate boxes, for checking in QuPath. Its third box (11000–18059) has only 3% immune and can be ignored.
+  - **Right-hand three-region candidates** (Tumor + Immune infiltration + Adipose, at the top-right edge; the maintainer wants three annotated regions in the crop):
+    - A 1.5 mm square can't balance them: the best is 8% tumour, 78% immune, 7% adipose.
+    - **Candidate 3**, 1.5 × 2.5 mm (portrait): x 46501–53559, y 500–12264 px. Tumour 18%, immune 57%, adipose 16%, 34,042 cells. The best balance.
+    - **Candidate 4**, 1.5 × 2.0 mm: x 46501–53559, y 2000–11411 px. Tumour 13%, immune 68%, adipose 12%, 29,830 cells.
+    - Both are in the QuPath candidates file.
   - **Not yet chosen.**
 - **QuPath GeoJSON import requirements** (found 2026-11-13). The first candidates file failed in QuPath 0.7 with `Unable to parse PathClass`. When exporting GeoJSON for QuPath:
   - give every `classification` both `name` and `color` (an RGB list), with one colour per class name;
