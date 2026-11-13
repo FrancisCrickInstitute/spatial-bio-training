@@ -29,6 +29,15 @@ The workshop environment is `pixi.toml` + `pixi.lock`, locked for linux-64, win-
 - **Notebooks only for Day 2.** Session 8 points to upstream CellSurvey as the "notebooks → pipeline" example.
 - **Distances in µm**, matching upstream CellSurvey (which converted its spatial parameters to µm on `feature/instanseg`).
 - **No bring-your-own-data session.** Applications capture participants' projects and goals. The workshop teaches tool choice and how to ask the right questions, not analysis of attendees' own data.
+- **Workshop data = one cropped, SpatialData/Sopa-ready Zarr** (decided 2026-11-13). Participants never touch raw Xenium output: they open one Zarr with `spatialdata.read_zarr` and can pass it straight to Sopa (`sopa.make_image_patches`, `sopa.segmentation.instanseg`, `sopa.aggregate`). Built from the chosen crop, it holds:
+  - **Images:** `morphology_focus` (35 channels, +100 offset removed from the protein channels, pyramidal) and the aligned H&E (pyramidal).
+  - **Points:** `transcripts`, with `feature_name` as the gene column.
+  - **Shapes:** 10x's `cell_boundaries` and `nucleus_boundaries` (for the session 6 comparison), plus the pathology annotations.
+  - **Table:** cells × features with unique feature names, linked to `cell_boundaries`.
+  - **Coordinates:** a µm coordinate system alongside spatialdata-io's pixel `global` one.
+  - The Day 1 QuPath files (cropped images and annotation/cell GeoJSON) are exported from the same crop, so both days see identical data. Exact element names and whether protein gets its own table are still to settle.
+- **A walkthrough notebook for preparing the full dataset** (decided 2026-11-13), for anyone who wants to work on the whole slide after the workshop. It covers download, reading, offset correction, unique feature names, alignment, cropping (optional) and writing the Zarr.
+  - **Recommended, to confirm: make this notebook the single source of truth** instead of keeping a separate `prepare_data.py` that could drift from it. It is parameterised by a crop box: `None` for the full slide, the chosen box for the workshop bundle. The maintainer builds the Zenodo bundle by executing it headless on the HPC (`jupyter nbconvert --to notebook --execute`). `Scripts/` then keeps only small helpers, or none.
 - **Compute is still open.** The design assumes precomputed checkpoints (one SpatialData Zarr per notebook in the download), so most of Day 2 runs on modest hardware. Live segmentation runs on one small tile only.
 
 ## Programme (4 sessions/day, 09:30–17:00)
@@ -73,8 +82,9 @@ README.md            workshop page (overview, registration, instructors, prepara
 Pages/               Installation-Instructions.md, Data.md, Day1/ (session guides), Day2/
 qupath/              Day 1 classifiers + class lists (the project itself ships in the data download)
 notebooks/           05_data_model_and_loading … 08_spatial_and_next_steps
+                     extra/prepare_xenium_dataset.ipynb (post-workshop: download + prepare the full slide; also builds the bundle)
 solutions/           completed notebooks with outputs
-Scripts/             prepare_data.py (download, crop, checkpoints), check_install.py, inspect_xenium.py (maintainer-only)
+Scripts/             check_install.py, inspect_xenium.py (maintainer-only); prepare_data.py only if the notebook isn't the source of truth
 assets/
 pixi.toml
 ```
@@ -84,14 +94,15 @@ pixi.toml
 ## Large and private files
 - `qupath_content/` (the original QuPath course) is **gitignored**. Copy only classifiers and class lists from it into `qupath/`.
 - Never commit the 80 MB slide deck (slides live on Google Drive) or the QuPath project `data/` folders (~450 MB). The `.qpproj` files store absolute paths from the author's machine, and the projects will be rebuilt on the RCC data.
-- Workshop data never goes in git. It is downloaded by `Scripts/prepare_data.py` or from the Zenodo bundle.
+- Workshop data never goes in git. Participants download the Zenodo bundle; the preparation notebook builds it (and the full-slide version) from 10x's files. Commit that notebook **without outputs**, since its outputs would include large images.
 
 ## Order of work
 0. **Upstream first**: **done on `feature/instanseg`** in upstream CellSurvey (2026-11-10). Merge to upstream `main` is pending final tests. Adds `--segmenter instanseg`, requires `sopa>=2.3.0`, separates TensorFlow/Stardist and PyTorch/InstanSeg into separate pixi environments, and converts spatial distances to µm.
 1. **Teardown** (done): remove the CellSurvey files, write a README skeleton, slim down `AGENTS.md`/`CLAUDE.md`.
 2. **Environment** (done, see Status): new `pixi.toml`/`pixi.lock`, `Scripts/check_install.py`, a matching `requirements.txt`, and `Pages/Installation-Instructions.md` (QuPath + extensions, pixi, `check-full`, troubleshooting including the certificate errors). `pixi.lock` is format v7, so participants need pixi ≥ 0.68. **Still to do:** run `pixi run check-full` on macOS, and fill in the organisers' contact details and the data link on the installation page.
-3. **Data**: `Scripts/prepare_data.py`. The licence and file list are confirmed (see Dataset).
-   - Next: run `Scripts/inspect_xenium.py` on the HPC, then the QuPath test (see Open questions), then choose the crop.
+3. **Data**: build the cropped SpatialData/Sopa-ready Zarr and the Day 1 QuPath files (see Decisions), via the preparation notebook (or `prepare_data.py`). The licence and file list are confirmed (see Dataset).
+   - Next: the QuPath test (the maintainer is opening the full slide in QuPath), then choose the crop.
+   - Then write the preparation notebook. Develop it against the crop and run it headless on the HPC to build the Zenodo bundle. Check that the Zarr round-trips through `spatialdata.read_zarr` and a small `sopa.make_image_patches` + `sopa.segmentation.instanseg` run.
    - `Scripts/inspect_xenium.py --data-dir <dir> [--with-he]` is a maintainer-only script, written 2026-11-13. It downloads `outs.zip` and the small files, resuming if interrupted, then extracts them. It reports what `experiment.xenium` and the panels contain, and reads each `morphology_focus/` file directly with tifffile (shape, dtype, value percentiles, so the +100 offset is visible). It then runs test 1 with `spatialdata_io.xenium` and writes `inspection_report.json`.
    - Ran successfully on the HPC on 2026-11-13. The data and `inspection_report.json` are in `/nemo/stp/lm/working/barryd/hpc/projects/stps/lm/spatial-bio-training/10x_xenium_data` (`Z:\working\...` from Windows). Findings are under Open questions.
 4. **Day 2 notebooks**: 06 first (riskiest), then 05, 07, 08.
