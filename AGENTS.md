@@ -135,6 +135,9 @@ pixi.toml
   - Both lie along the top edge, where the first Immune infiltration region borders the main Tumor region.
   - `annotations_xenium_px_with_crop_candidates.geojson` (in the HPC data folder) holds the transformed annotations, clipped to the image, plus the candidate boxes, for checking in QuPath. Its third box (11000–18059) has only 3% immune and can be ignored.
   - **Not yet chosen.**
+- **QuPath GeoJSON import requirements** (found 2026-11-13). The first candidates file failed in QuPath 0.7 with `Unable to parse PathClass`. When exporting GeoJSON for QuPath:
+  - give every `classification` both `name` and `color` (an RGB list), with one colour per class name;
+  - keep only Polygon/MultiPolygon geometries, since clipping can produce a GeometryCollection.
 - `protein_panel.json` lists 28 targets under `payload.panel.targets`, against `num_targets: 27`. The gene panel's `payload.targets` has 465 entries.
 - **Original test question:** does `spatialdata_io.xenium` (0.7.1) read all 35 per-channel protein images from XOA 4.0's `morphology_focus/`? Its documentation doesn't say, but its source has an explicit XOA v4 path. That path takes channel names from the OME-XML in `ch0000_dapi.ome.tif` and loads the `chNNNN_*.ome.tif` files as one multichannel image, so it will probably pass. `Scripts/inspect_xenium.py` checks it on the real files.
   - **Always pass `gex_only=False`.** The default (`True`) drops the Protein Expression features from the cell table. With `False`, spatialdata-io keeps them and undoes 10x's fixed-point scaling of protein values in `cell_feature_matrix.h5`. That is separate from the +100 offset in the images.
