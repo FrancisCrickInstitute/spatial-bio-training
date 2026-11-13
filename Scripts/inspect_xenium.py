@@ -149,10 +149,29 @@ def inspect_experiment(outs):
     for panel_file in ["gene_panel.json", "protein_panel.json"]:
         path = outs / panel_file
         if path.exists():
+            # The layout isn't documented, so describe it rather than assume where the targets are.
             panel = json.loads(path.read_text())
-            targets = panel.get("payload", {}).get("targets", panel.get("targets", []))
-            print(f"  {panel_file}: {len(targets)} targets")
-            report[panel_file] = len(targets)
+            print(f"  {panel_file} structure:")
+            report[panel_file] = describe_json(panel)
+
+
+def describe_json(value, prefix="    ", depth=0, max_depth=3):
+    """Print the keys of a JSON object (and lengths of its lists) a few levels deep."""
+    summary = {}
+    if isinstance(value, dict) and depth < max_depth:
+        for key, child in value.items():
+            if isinstance(child, list):
+                print(f"{prefix}{key}: list of {len(child)}")
+                summary[key] = f"list of {len(child)}"
+                if child and isinstance(child[0], dict):
+                    print(f"{prefix}  first item keys: {list(child[0])}")
+            elif isinstance(child, dict):
+                print(f"{prefix}{key}:")
+                summary[key] = describe_json(child, prefix + "  ", depth + 1, max_depth)
+            else:
+                print(f"{prefix}{key}: {child}")
+                summary[key] = child
+    return summary
 
 
 def inspect_focus_files(outs):
@@ -165,10 +184,20 @@ def inspect_focus_files(outs):
     print(f"  {'file':<40} {'level 0 shape':<16} {'dtype':<7} {'min':>6} {'p50':>7} {'p99':>7} {'max':>7}")
     rows = []
     for path in files:
-        with tifffile.TiffFile(path) as tif:
+        # is_ome=False: otherwise tifffile follows the OME-XML and opens the combined
+        # 35-file image from every file, instead of this file's own channel.
+        with tifffile.TiffFile(path, is_ome=False) as tif:
             series = tif.series[0]
             level0 = series.levels[0]
-            coarse = series.levels[-1].asarray()
+            smallest = series.levels[-1]
+            if np.prod(smallest.shape) <= 50_000_000:
+                coarse = smallest.asarray()
+            else:  # no usable pyramid: sample a central 4096 x 4096 window instead
+                import zarr
+
+                store = zarr.open(smallest.aszarr(), mode="r")
+                cy, cx = (s // 2 for s in smallest.shape[-2:])
+                coarse = np.asarray(store[..., cy - 2048:cy + 2048, cx - 2048:cx + 2048])
         stats = np.percentile(coarse, [0, 50, 99, 100])
         shape = "x".join(str(s) for s in level0.shape)
         print(f"  {path.name:<40} {shape:<16} {str(level0.dtype):<7} "
@@ -217,29 +246,46 @@ def inspect_spatialdata(outs, n_focus_files):
     for name, shapes in sdata.shapes.items():
         print(f"  shapes {name}: {len(shapes)} rows, geometry {shapes.geometry.geom_type.iloc[0]}")
         report.setdefault("shapes", {})[name] = len(shapes)
-    for name, points in sdata.points.items():
-        print(f"  points {name}: columns {list(points.columns)}")
-        report.setdefault("points", {})[name] = list(points.columns)
-    try:
-        import pyarrow.parquet as pq
+    import pyarrow.parquet as pq
 
-        rows = pq.ParquetFile(outs / "transcripts.parquet").metadata.num_rows
-        print(f"  transcripts.parquet: {rows:,} transcripts")
-        report["n_transcripts"] = rows
-    except Exception as error:
-        print(f"  Couldn't count transcripts: {error}")
+    parquet = pq.ParquetFile(outs / "transcripts.parquet")
+    parquet_rows = parquet.metadata.num_rows
+    print(f"  transcripts.parquet: {parquet_rows:,} rows in {parquet.metadata.num_row_groups} row groups")
+    report["transcripts_parquet_rows"] = parquet_rows
+    for name, points in sdata.points.items():
+        print(f"  points {name}: columns {list(points.columns)}, {points.npartitions} partitions")
+        # The SpatialData printout showed 11x the parquet row count: count exactly.
+        start = time.time()
+        n_points = int(points.map_partitions(len).compute().sum())
+        same = n_points == parquet_rows
+        print(f"    exact row count: {n_points:,} ({time.time() - start:.0f} s) "
+              f"{'= parquet rows' if same else f'!= parquet rows ({n_points / parquet_rows:.2f}x)'}")
+        report.setdefault("points", {})[name] = {"columns": list(points.columns),
+                                                 "npartitions": int(points.npartitions),
+                                                 "rows": n_points, "matches_parquet": same}
 
     for name, table in sdata.tables.items():
         types = table.var["feature_types"].value_counts().to_dict() if "feature_types" in table.var else {}
         print(f"  table {name}: {table.n_obs:,} cells x {table.n_vars} features {types}")
-        protein = (table.var_names[table.var["feature_types"] == "Protein Expression"]
-                   if "feature_types" in table.var else [])
-        if len(protein):
-            x = table[:, protein].X
+        report.setdefault("tables", {})[name] = {"n_obs": int(table.n_obs), "feature_types": types}
+        if "feature_types" not in table.var:
+            continue
+        # Select by position, not name: protein and gene names can be the same (e.g. CD4),
+        # so var_names aren't unique and name-based indexing fails.
+        is_protein = (table.var["feature_types"] == "Protein Expression").to_numpy()
+        is_gene = (table.var["feature_types"] == "Gene Expression").to_numpy()
+        protein = list(table.var_names[is_protein])
+        clashes = sorted(set(protein) & set(table.var_names[is_gene]))
+        duplicated = sorted(set(table.var_names[table.var_names.duplicated()]))
+        print(f"    duplicated var names: {len(duplicated)} {duplicated}")
+        print(f"    protein names that are also gene names: {clashes}")
+        if protein:
+            x = table.X[:, is_protein]
             x = x.toarray() if hasattr(x, "toarray") else np.asarray(x)
             print(f"    protein values: min {x.min():.2f}, median {np.median(x):.2f}, max {x.max():.2f}")
             print(f"    protein features: {', '.join(protein)}")
-        report.setdefault("tables", {})[name] = {"n_obs": int(table.n_obs), "feature_types": types}
+        report["tables"][name].update({"duplicated_var_names": duplicated, "protein_gene_clashes": clashes,
+                                       "protein_features": protein})
 
     print("  Coordinate systems:", ", ".join(sdata.coordinate_systems))
     report["coordinate_systems"] = list(sdata.coordinate_systems)
