@@ -125,6 +125,16 @@ pixi.toml
   - `he_imagealignment.csv` maps H&E pixels to Xenium pixels: a 90° rotation and ×1.2896 scale, so an H&E pixel is about 0.274 µm. Translation is (−11896, 28914).
 - **`annotation.geojson` coordinates are in H&E pixels.** Its 9 polygons are Tumor ×3, Necrosis, Immune infiltration ×2, Hemorrhage, Adipose tissue and Blood vessels.
   - 5 of the 9 have only a `name` and no `classification`, and one "Immune infiltration" is classified "Immune cells". `prepare_data.py` should set each classification from its name for QuPath.
+  - **Transform them with `he_imagealignment.csv` before use** (shapely `affine_transform` with `[a, b, d, e, xoff, yoff]` from rows 1–2). Untransformed, they appear rotated 90° in QuPath (confirmed by the maintainer, 2026-11-13).
+  - The transform was checked against cell density: Immune infiltration about 12,100 cells/mm², Tumor about 6,800, Adipose about 560, whole image about 7,000.
+  - **Blood vessels and Hemorrhage lie entirely outside the Xenium region**, because the H&E covers more tissue than Xenium imaged. Adipose is only 0.75 mm² inside it. Within the Xenium image, only Tumor ×3, Immune infiltration ×2, Necrosis and part of Adipose are usable. Use CD31 to show vessels instead.
+- QuPath 0.7 loads all 35 `morphology_focus` channels when `ch0000_dapi.ome.tif` is opened (confirmed by the maintainer, 2026-11-13). Test 2 is passed for loading; responsiveness on the crop is still to check.
+- **Crop candidates** (2026-11-13) are 1.5 × 1.5 mm = 7059 px windows, ranked by how evenly they mix Tumor, Immune infiltration and unannotated tissue. Coordinates are Xenium pixels (multiply by 0.2125 for µm):
+  - **Candidate 1:** x 7000–14059, y 0–7059. Tumour 55%, immune 24%, unannotated 21%, 16,047 cells. The most balanced.
+  - **Candidate 2:** x 0–7059, y 0–7059, the top-left corner. Tumour 32%, immune 51%, unannotated 18%, 19,934 cells.
+  - Both lie along the top edge, where the first Immune infiltration region borders the main Tumor region.
+  - `annotations_xenium_px_with_crop_candidates.geojson` (in the HPC data folder) holds the transformed annotations, clipped to the image, plus the candidate boxes, for checking in QuPath. Its third box (11000–18059) has only 3% immune and can be ignored.
+  - **Not yet chosen.**
 - `protein_panel.json` lists 28 targets under `payload.panel.targets`, against `num_targets: 27`. The gene panel's `payload.targets` has 465 entries.
 - **Original test question:** does `spatialdata_io.xenium` (0.7.1) read all 35 per-channel protein images from XOA 4.0's `morphology_focus/`? Its documentation doesn't say, but its source has an explicit XOA v4 path. That path takes channel names from the OME-XML in `ch0000_dapi.ome.tif` and loads the `chNNNN_*.ome.tif` files as one multichannel image, so it will probably pass. `Scripts/inspect_xenium.py` checks it on the real files.
   - **Always pass `gex_only=False`.** The default (`True`) drops the Protein Expression features from the cell table. With `False`, spatialdata-io keeps them and undoes 10x's fixed-point scaling of protein values in `cell_feature_matrix.h5`. That is separate from the +100 offset in the images.
