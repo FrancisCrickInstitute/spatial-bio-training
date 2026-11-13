@@ -74,7 +74,7 @@ Pages/               Installation-Instructions.md, Data.md, Day1/ (session guide
 qupath/              Day 1 classifiers + class lists (the project itself ships in the data download)
 notebooks/           05_data_model_and_loading … 08_spatial_and_next_steps
 solutions/           completed notebooks with outputs
-Scripts/             prepare_data.py (download, crop, checkpoints), check_install.py
+Scripts/             prepare_data.py (download, crop, checkpoints), check_install.py, inspect_xenium.py (maintainer-only)
 assets/
 pixi.toml
 ```
@@ -90,12 +90,16 @@ pixi.toml
 0. **Upstream first**: **done on `feature/instanseg`** in upstream CellSurvey (2026-11-10). Merge to upstream `main` is pending final tests. Adds `--segmenter instanseg`, requires `sopa>=2.3.0`, separates TensorFlow/Stardist and PyTorch/InstanSeg into separate pixi environments, and converts spatial distances to µm.
 1. **Teardown** (done): remove the CellSurvey files, write a README skeleton, slim down `AGENTS.md`/`CLAUDE.md`.
 2. **Environment** (done, see Status): new `pixi.toml`/`pixi.lock`, `Scripts/check_install.py`, a matching `requirements.txt`, and `Pages/Installation-Instructions.md` (QuPath + extensions, pixi, `check-full`, troubleshooting including the certificate errors). `pixi.lock` is format v7, so participants need pixi ≥ 0.68. **Still to do:** run `pixi run check-full` on macOS, and fill in the organisers' contact details and the data link on the installation page.
-3. **Data**: `Scripts/prepare_data.py`. The licence and file list are confirmed (see Dataset). Next: download the full bundle on the HPC, run the two hands-on tests (see Open questions), then choose the crop.
+3. **Data**: `Scripts/prepare_data.py`. The licence and file list are confirmed (see Dataset).
+   - Next: run `Scripts/inspect_xenium.py` on the HPC, then the QuPath test (see Open questions), then choose the crop.
+   - `Scripts/inspect_xenium.py --data-dir <dir> [--with-he]` is a maintainer-only script, written 2026-11-13. It downloads `outs.zip` and the small files, resuming if interrupted, then extracts them. It reports what `experiment.xenium` and the panels contain, and reads each `morphology_focus/` file directly with tifffile (shape, dtype, value percentiles, so the +100 offset is visible). It then runs test 1 with `spatialdata_io.xenium` and writes `inspection_report.json`.
+   - Tested offline on a fake XOA 4.0 folder only. The download and the full spatialdata-io read are untested.
 4. **Day 2 notebooks**: 06 first (riskiest), then 05, 07, 08.
 5. **Day 1**: port the QuPath exercises to the RCC data and write the `Pages/Day1/` guides (QuPath GUI work, led by the instructors).
 
 ## Open questions
-- **Test:** does `spatialdata_io.xenium` (0.7.1) read all 35 per-channel protein images from XOA 4.0's `morphology_focus/`? Its documentation doesn't say.
+- **Test:** does `spatialdata_io.xenium` (0.7.1) read all 35 per-channel protein images from XOA 4.0's `morphology_focus/`? Its documentation doesn't say, but its source has an explicit XOA v4 path. That path takes channel names from the OME-XML in `ch0000_dapi.ome.tif` and loads the `chNNNN_*.ome.tif` files as one multichannel image, so it will probably pass. `Scripts/inspect_xenium.py` checks it on the real files.
+  - **Always pass `gex_only=False`.** The default (`True`) drops the Protein Expression features from the cell table. With `False`, spatialdata-io keeps them and undoes 10x's fixed-point scaling of protein values in `cell_feature_matrix.h5`. That is separate from the +100 offset in the images.
   - **If it doesn't, keep `spatialdata_io.xenium` for everything except the images, and read the images with bioio.** spatialdata-io also reads the transcripts (points), cell and nucleus boundaries (shapes) and the cell-by-feature table, puts them in one µm coordinate system, and loads the H&E with `xenium_aligned_image`. Reimplementing that would be more work than the image step.
   - How: call `spatialdata_io.xenium(..., morphology_focus=False, morphology_mip=False)`. Then read the 35 `morphology_focus/` files with bioio (or plain `tifffile`), stack them with channel names taken from the file names, and add them with `Image2DModel.parse`. Give it a 0.2125 µm/px scale transform (check the bundle's `experiment.xenium`) so it lines up with the µm-space elements, plus multiscale levels for a pyramid. bioio and bioio-ome-tiff would need adding to `pixi.toml` and `requirements.txt`.
   - This only affects `prepare_data.py`: participants open the cropped SpatialData Zarr checkpoints with `spatialdata.read_zarr`, not raw Xenium output. Building the image layer by hand could even be shown in session 5, since it makes SpatialData elements and transforms explicit.
