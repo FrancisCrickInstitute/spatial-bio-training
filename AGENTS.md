@@ -33,11 +33,31 @@ The workshop environment is `pixi.toml` + `pixi.lock`, locked for linux-64, win-
   - **Images:** `morphology_focus` (35 channels, +100 offset removed from the protein channels, pyramidal) and the aligned H&E (pyramidal).
   - **Points:** `transcripts`, with `feature_name` as the gene column.
   - **Shapes:** 10x's `cell_boundaries` and `nucleus_boundaries` (for the session 6 comparison), plus the pathology annotations.
-  - **Table:** cells × features with unique feature names, linked to `cell_boundaries`.
+  - **Tables (decided 2026-11-13):** two tables over the same cells, both linked to `cell_boundaries` with the same cell IDs.
+    - `table` holds genes only (transcript counts). The 111 control and codeword features are dropped, but the per-cell control counts stay as `obs` columns.
+    - `protein` holds the 27 protein intensities.
+    - Names stay natural (`CD4` in both), so the 9 gene/protein clashes don't matter. Each table gets its own normalisation: counts and intensities must not be normalised together.
   - **Coordinates:** a µm coordinate system alongside spatialdata-io's pixel `global` one.
-  - The Day 1 QuPath files (cropped images and annotation/cell GeoJSON) are exported from the same crop, so both days see identical data. Exact element names and whether protein gets its own table are still to settle.
+- **Day 1 works on the same crop, exported for QuPath** (decided 2026-11-13). The same notebook run writes, alongside the Zarr:
+  - the cropped 35-channel IF image as a pyramidal OME-TIFF, offset-corrected so values match Day 2;
+  - the cropped H&E;
+  - 10x's pathology annotations as GeoJSON, and optionally 10x's cell boundaries;
+  - possibly a ready-made QuPath project.
+  - **Crop-local coordinates (decided 2026-11-13, option A).** The Zarr and the OME-TIFFs both start at the crop corner (0, 0) in µm and pixels, so Day 1 GeoJSON loads into the Zarr in session 5 without shifting. Nobody needs to apply an offset during the workshop.
+    - The full-slide offset (x 1487.5 µm, y 0) is recorded for traceability only: in the Zarr's metadata, and in the OME-TIFFs as `Plane PositionX/PositionY`.
+    - QuPath is believed to ignore OME stage positions and always start at (0, 0). Not yet verified, but it doesn't matter under option A.
+    - Rejected, option B: keep slide coordinates in the Zarr and apply a translation when loading Day 1 GeoJSON.
+  - **H&E resampled for Day 1 (decided 2026-11-13).** The exported H&E OME-TIFF is resampled into the IF image's frame and pixel size (0.2125 µm), so annotations move between H&E, IF and Day 2 unchanged. The Zarr keeps the original (cropped) H&E plus its affine transform, which shows SpatialData's way of handling registration in session 5.
+- **The preparation notebook builds everything from 10x's raw files** (decided 2026-11-13): the Day 2 Zarr and the Day 1 OME-TIFFs/GeoJSON, in one run, so attendees can reproduce the workshop data after the course.
+  - **It should work on other Xenium datasets too.** No values specific to this dataset are hard-coded:
+    - URLs, file names and the crop box are parameters.
+    - Pixel size and XOA version come from `experiment.xenium`.
+    - Protein channels are found by matching image channel names to the table's Protein Expression features. The +100 offset is applied only for XOA ≥ 4.
+    - The H&E, alignment and annotations are optional; skip those steps when absent.
+    - Protein steps are skipped for RNA-only runs.
+    - Image reading follows whatever XOA version spatialdata-io supports.
 - **A walkthrough notebook for preparing the full dataset** (decided 2026-11-13), for anyone who wants to work on the whole slide after the workshop. It covers download, reading, offset correction, unique feature names, alignment, cropping (optional) and writing the Zarr.
-  - **Recommended, to confirm: make this notebook the single source of truth** instead of keeping a separate `prepare_data.py` that could drift from it. It is parameterised by a crop box: `None` for the full slide, the chosen box for the workshop bundle. The maintainer builds the Zenodo bundle by executing it headless on the HPC (`jupyter nbconvert --to notebook --execute`). `Scripts/` then keeps only small helpers, or none.
+  - **Decided 2026-11-13: this notebook is the single source of truth.** There is no separate `prepare_data.py` to drift from it. It is parameterised by a crop box: `None` for the full slide, the chosen box for the workshop bundle. The maintainer builds the Zenodo bundle by executing it headless on the HPC (`jupyter nbconvert --to notebook --execute`). `Scripts/` then keeps only small helpers, or none.
 - **Compute is still open.** The design assumes precomputed checkpoints (one SpatialData Zarr per notebook in the download), so most of Day 2 runs on modest hardware. Live segmentation runs on one small tile only.
 
 ## Programme (4 sessions/day, 09:30–17:00)
@@ -74,7 +94,7 @@ The workshop environment is `pixi.toml` + `pixi.lock`, locked for linux-64, win-
   - Cell boundaries: there is no built-in importer. `prepare_data.py` should convert the cropped `cell_boundaries.parquet` to QuPath GeoJSON (µm → pixels).
   - Transcripts: there is no supported route, only community scripts and an open request on [uw-loci/qupath-extension-cell-analysis-tools#25](https://github.com/uw-loci/qupath-extension-cell-analysis-tools/issues/25). Large GeoJSON files strain QuPath's importer.
   - **Recommendation (not yet decided):** transcripts on Day 2 only, with at most a small points GeoJSON as a Day 1 demonstration.
-- **Crop size:** at about 7,000 cells/mm², a 1.5 × 1.5 mm crop gives roughly 16,000 cells. Choose it from the H&E plus the pathology annotations, so it includes tumour, immune infiltration and stroma. The 36 GB bundle should be downloaded on the HPC; participants only download the Zenodo crop.
+- **Crop:** chosen 2026-11-13, x 1487.5–2987.5 µm, y 0–1500 µm, about 16,000 cells (details under Open questions). The 36 GB bundle is downloaded on the HPC; participants only download the Zenodo crop.
 
 ## Target layout
 ```
@@ -84,7 +104,7 @@ qupath/              Day 1 classifiers + class lists (the project itself ships i
 notebooks/           05_data_model_and_loading … 08_spatial_and_next_steps
                      extra/prepare_xenium_dataset.ipynb (post-workshop: download + prepare the full slide; also builds the bundle)
 solutions/           completed notebooks with outputs
-Scripts/             check_install.py, inspect_xenium.py (maintainer-only); prepare_data.py only if the notebook isn't the source of truth
+Scripts/             check_install.py, inspect_xenium.py (maintainer-only)
 assets/
 pixi.toml
 ```
@@ -101,7 +121,7 @@ pixi.toml
 1. **Teardown** (done): remove the CellSurvey files, write a README skeleton, slim down `AGENTS.md`/`CLAUDE.md`.
 2. **Environment** (done, see Status): new `pixi.toml`/`pixi.lock`, `Scripts/check_install.py`, a matching `requirements.txt`, and `Pages/Installation-Instructions.md` (QuPath + extensions, pixi, `check-full`, troubleshooting including the certificate errors). `pixi.lock` is format v7, so participants need pixi ≥ 0.68. **Still to do:** run `pixi run check-full` on macOS, and fill in the organisers' contact details and the data link on the installation page.
 3. **Data**: build the cropped SpatialData/Sopa-ready Zarr and the Day 1 QuPath files (see Decisions), via the preparation notebook (or `prepare_data.py`). The licence and file list are confirmed (see Dataset).
-   - Next: the QuPath test (the maintainer is opening the full slide in QuPath), then choose the crop.
+   - QuPath loading is confirmed and the crop is chosen (candidate 1; see Open questions). Next: the preparation notebook.
    - Then write the preparation notebook. Develop it against the crop and run it headless on the HPC to build the Zenodo bundle. Check that the Zarr round-trips through `spatialdata.read_zarr` and a small `sopa.make_image_patches` + `sopa.segmentation.instanseg` run.
    - `Scripts/inspect_xenium.py --data-dir <dir> [--with-he]` is a maintainer-only script, written 2026-11-13. It downloads `outs.zip` and the small files, resuming if interrupted, then extracts them. It reports what `experiment.xenium` and the panels contain, and reads each `morphology_focus/` file directly with tifffile (shape, dtype, value percentiles, so the +100 offset is visible). It then runs test 1 with `spatialdata_io.xenium` and writes `inspection_report.json`.
    - Ran successfully on the HPC on 2026-11-13. The data and `inspection_report.json` are in `/nemo/stp/lm/working/barryd/hpc/projects/stps/lm/spatial-bio-training/10x_xenium_data` (`Z:\working\...` from Windows). Findings are under Open questions.
@@ -139,7 +159,11 @@ pixi.toml
     - **Candidate 3**, 1.5 × 2.5 mm (portrait): x 46501–53559, y 500–12264 px. Tumour 18%, immune 57%, adipose 16%, 34,042 cells. The best balance.
     - **Candidate 4**, 1.5 × 2.0 mm: x 46501–53559, y 2000–11411 px. Tumour 13%, immune 68%, adipose 12%, 29,830 cells.
     - Both are in the QuPath candidates file.
-  - **Not yet chosen.**
+  - **CHOSEN (2026-11-13): candidate 1.** Workshop crop = **x 1487.5–2987.5 µm, y 0–1500 µm** (1.5 × 1.5 mm). In Xenium pixels at 0.2125 µm/px that is x 7000–14059, y 0–7059.
+    - It contains about 16,000 cells: tumour 55%, immune infiltration 24% and 21% unannotated tissue (no necrosis or adipose).
+    - It sits on the image's top edge, where the first Immune infiltration region borders the main Tumor region.
+    - Candidates 3 and 4 (three annotated regions) were rejected: immune-dominated and about twice the cells.
+    - Crop in µm in the preparation notebook, and derive pixel bounds from `pixel_size` in `experiment.xenium`.
 - **QuPath GeoJSON import requirements** (found 2026-11-13). The first candidates file failed in QuPath 0.7 with `Unable to parse PathClass`. When exporting GeoJSON for QuPath:
   - give every `classification` both `name` and `color` (an RGB list), with one colour per class name;
   - keep only Polygon/MultiPolygon geometries, since clipping can produce a GeometryCollection.
@@ -152,5 +176,5 @@ pixi.toml
   - The +100 protein offset needs handling with either reader.
 - **Test:** does QuPath 0.7 load all 35 channels from `ch0000_dapi.ome.tif`, and stay responsive on the crop?
 - Transcripts on Day 1: decide whether to adopt the Day 2-only recommendation in Dataset.
-- Crop region (size suggested in Dataset); compute platform; cohort size and dates.
+- Compute platform; cohort size and dates.
 - Source and sharing terms of the original liver `.vsi` and `LungImg1.ome.tif` course images.
