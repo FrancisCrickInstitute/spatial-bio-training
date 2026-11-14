@@ -128,6 +128,7 @@ The workshop environment is `pixi.toml` + `pixi.lock`, locked for linux-64, win-
   - give every `classification` both `name` and `color` (an RGB list), with one colour per class name;
   - keep only Polygon/MultiPolygon geometries, since clipping can produce a GeometryCollection.
 - **Cropping spatialdata-io elements.** Cropped copies of its GeoDataFrames and DataFrames keep the old transforms in `.attrs`, so clear them before `ShapesModel`/`PointsModel.parse` with new transforms.
+- **Don't display a SpatialData object after `write()` if an element is read lazily through tifffile** (`tifffile.imread(..., aszarr=True)`). Once the object has a path, its summary traces each image back to its files and fails with `'ZarrTiffStore' object has no attribute 'root'` (spatialdata 0.8). Print it before writing, or display the object read back with `read_zarr`. Found on the HPC run, 2026-11-14.
 - **Sopa on the workshop Zarr.** `sopa.aggregate` writes to `table` by default, which would overwrite 10x's gene table. In session 6 pass `key_added` and `image_key="morphology_focus"` (there are two images).
 - `protein_panel.json` lists 28 targets under `payload.panel.targets`, against `num_targets: 27`. The gene panel's `payload.targets` has 465 entries.
 
@@ -159,6 +160,7 @@ pixi.toml
    - Done: inspection of the real bundle (`Scripts/inspect_xenium.py`, see Data findings), QuPath loading test, crop choice, and the notebook itself (2026-11-13).
    - Run it headless with `XENIUM_RAW_DIR`, `XENIUM_OUTPUT_DIR`, `XENIUM_NAME`, `XENIUM_DOWNLOAD=0/1`, `XENIUM_CROP=full|x0,y0,x1,y1` (µm), `XENIUM_VALIDATE=0/1` and `XENIUM_ZIP=0/1`. Relative folders count from the repo root, because nbconvert runs kernels in `notebooks/extra/`.
    - Every step after reading has been checked on a small synthetic Xenium-like dataset: protein offset, H&E resampling, annotation transform, table links, OME-TIFF pyramids and Plane positions, and the zips. The final check (read the Zarr back, then `sopa.make_image_patches` + `sopa.segmentation.instanseg` on a central 1024 px tile) also runs.
+   - First real-data run (HPC, 2026-11-14): reading through to the Zarr write worked (the write took 731 s for the crop), then the cell failed while displaying the object (fixed; see the tifffile gotcha in Data findings). Steps 10–12 haven't run on real data yet.
    - **Next:** finish the full real-data run on the HPC and check its outputs: the Zarr round-trip and Sopa tile, and the OME-TIFFs and GeoJSON in QuPath (alignment of H&E, IF and annotations; responsiveness). Then upload the bundle to Zenodo and add the link to `README.md` and `Pages/Installation-Instructions.md`.
    - Possible improvement for `XENIUM_CROP=full`: the notebook filters transcripts with dask (`points[inside].compute()`), which loads every transcript in the region. Fine for the crop; for the whole slide (77 M transcripts) it may need more memory than a laptop has. Filtering `transcripts.parquet` with pyarrow would be lighter.
 4. **Day 2 notebooks**: 06 first (riskiest), then 05, 07, 08.
