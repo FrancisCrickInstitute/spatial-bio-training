@@ -6,7 +6,7 @@ The repo began as a fork of the [CellSurvey](https://github.com/FrancisCrickInst
 
 ## Status
 
-**2026-11-14:** steps 1 (teardown) and 2 (environment) are done and merged into `main`. Step 3 (data) is in progress: `notebooks/extra/prepare_xenium_dataset.ipynb` ran successfully on the real data on the HPC (2026-11-14) and produced the workshop Zarr and the QuPath files. Still to do: a check in QuPath, then the Zenodo upload. No Day 2 session notebooks or Day 1 guides exist yet.
+**2026-11-14:** steps 1 (teardown) and 2 (environment) are done and merged into `main`. Step 3 (data) is in progress: `notebooks/extra/prepare_xenium_dataset.ipynb` ran successfully on the real data on the HPC (2026-11-14) and produced the workshop Zarr and the QuPath files. The QuPath files have been checked in QuPath. Still to do: the Zenodo upload. No Day 2 session notebooks or Day 1 guides exist yet.
 
 The workshop environment is `pixi.toml` + `pixi.lock`, locked for linux-64, win-64 and osx-arm64. It uses Python 3.12, `sopa[instanseg]` 2.3, PyTorch, `spatialdata` 0.8, scanpy, squidpy, SegTraQ, napari (PyQt6) and JupyterLab, with no TensorFlow. Tasks:
 - `pixi run check` runs `Scripts/check_install.py`: imports, versions, compute device, Qt.
@@ -171,13 +171,14 @@ pixi.toml
      - Sopa + InstanSeg found 284 cells in the central 1024 px tile (about 6,000/mm²).
      - Sizes: Zarr 934 MB, `_if.ome.tif` 805 MB, `_he.ome.tif` 150 MB, `_10x_cells.geojson` 17 MB, `_annotations.geojson` 9 KB. About 1.9 GB in total.
      - **Alignment checked visually** on a 1/8-scale overlay of the exported TIFFs and GeoJSON: H&E nuclei coincide with DAPI across the crop, and the Tumor and Immune infiltration outlines follow the tissue.
-   - **Day 1 note:** PanCK is sparse and patchy in this crop, as is common in RCC, so it may not separate tumour from stroma well. Check candidate markers in QuPath before porting the IF exercise.
-   - **Next:** check the QuPath files in QuPath (responsiveness of the 35-channel TIFF and the 16,045-cell GeoJSON). Then upload the bundle to Zenodo, rerunning with `XENIUM_ZIP=1` or zipping the outputs, and add the link to `README.md` and `Pages/Installation-Instructions.md`.   - Possible improvement for `XENIUM_CROP=full`: the notebook filters transcripts with dask (`points[inside].compute()`), which loads every transcript in the region. Fine for the crop; for the whole slide (77 M transcripts) it may need more memory than a laptop has. Filtering `transcripts.parquet` with pyarrow would be lighter.
+   - **QuPath check passed (maintainer, 2026-11-14):** the IF and H&E OME-TIFFs and both GeoJSON files load, line up and look good in QuPath 0.7.
+   - **Next:** upload the bundle to Zenodo, rerunning with `XENIUM_ZIP=1` or zipping the outputs, and add the link to `README.md` and `Pages/Installation-Instructions.md`.
+   - Possible improvement for `XENIUM_CROP=full`: the notebook filters transcripts with dask (`points[inside].compute()`), which loads every transcript in the region. Fine for the crop; for the whole slide (77 M transcripts) it may need more memory than a laptop has. Filtering `transcripts.parquet` with pyarrow would be lighter.
 4. **Day 2 notebooks**: 06 first (riskiest), then 05, 07, 08.
 5. **Day 1**: port the QuPath exercises to the RCC data and write the `Pages/Day1/` guides (QuPath GUI work, led by the instructors).
+   - **Adapt the IF exercise's markers to RCC.** PanCK is sparse and patchy in the workshop crop (common in RCC), so it won't separate tumour from stroma the way it did in the lung image. Choose more suitable markers instead (candidates to check in QuPath: E-Cadherin, Beta-catenin, Vimentin, CD31, alphaSMA).
 
 ## Open questions
-- Does QuPath 0.7 stay responsive on the cropped 35-channel IF image and the 10x cell GeoJSON (about 16,000 detections)?
 - Does QuPath ignore OME `Plane PositionX/PositionY`? Believed so; it doesn't matter under option A.
 - Ship a ready-made QuPath project in the download, or have participants build one in session 1?
 - Transcripts on Day 1: decide whether to adopt the Day 2-only recommendation in Dataset.
