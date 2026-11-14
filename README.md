@@ -1,7 +1,9 @@
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/) [![Built with Pixi](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/prefix-dev/pixi/main/assets/badge/v0.json)](https://pixi.sh) ![GitHub](https://img.shields.io/github/license/FrancisCrickInstitute/spatial-bio-training?color=green&style=plastic)
 
 > [!NOTE]
-> This workshop is under development. Dates, registration and materials will be added here as they are finalised.
+> This workshop is under development. Registration and materials will be added here as they are finalised.
+
+**Dates:** 25–26 February 2027 · **Places:** 20–30 · **Bring your own laptop** (see [Preparation](#preparation))
 
 # Overview
 
@@ -29,7 +31,7 @@ TBC
 
 # Preparation
 
-Before the workshop:
+You will work on your own laptop throughout: Windows, macOS on Apple Silicon (M1 or later) or Linux. You do not need a GPU. Before the workshop:
 
 1. Install QuPath and the Python environment, following the [installation instructions](Pages/Installation-Instructions.md). The Python environment works on Windows, Linux and macOS (Apple Silicon).
 2. From the repository folder, check the Python environment with `pixi run check-full`. This also downloads the cell segmentation model, so run it with an internet connection and preferably off any VPN.

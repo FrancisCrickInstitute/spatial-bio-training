@@ -48,7 +48,7 @@ The workshop environment is `pixi.toml` + `pixi.lock`, locked for linux-64, win-
   - `<NAME>_he.ome.tif`: the H&E, **resampled into the IF image's frame and pixel size** (0.2125 µm), so annotations move between H&E, IF and Day 2 unchanged. The Zarr keeps the original H&E plus its transform instead, which shows SpatialData's way of handling registration in session 5;
   - `<NAME>_annotations.geojson`: 10x's pathology annotations, aligned and clipped to the crop;
   - `<NAME>_10x_cells.geojson`: 10x's cell boundaries, as detections.
-  - Still open: whether to ship a ready-made QuPath project.
+  - **No ready-made QuPath project** (decided 2026-11-14). Participants build their own project in session 1 from these files.
   - **Crop-local coordinates (option A).** The Zarr and the OME-TIFFs both start at the crop corner (0, 0) in µm and pixels, so Day 1 GeoJSON loads into the Zarr in session 5 without shifting. Nobody needs to apply an offset during the workshop.
     - The full-slide offset (x 1487.5 µm, y 0) is recorded for traceability only: in the Zarr's attrs, and in the OME-TIFFs as `Plane PositionX/PositionY`.
     - QuPath is believed to ignore OME stage positions and always start at (0, 0). Not yet verified, but it doesn't matter under option A.
@@ -64,7 +64,11 @@ The workshop environment is `pixi.toml` + `pixi.lock`, locked for linux-64, win-
     - The H&E, alignment and annotations are optional; those steps are skipped when absent.
     - The `protein` table is skipped for RNA-only runs.
     - Image reading follows whatever XOA version spatialdata-io supports.
-- **Compute is still open.** The design assumes precomputed checkpoints (one SpatialData Zarr per notebook in the download), so most of Day 2 runs on modest hardware. Live segmentation runs on one small tile only.
+- **Workshop logistics (decided 2026-11-14):** **25–26 February 2027**, for **20–30 participants**, on **their own laptops**. There is no shared compute, so everything must run on a typical CPU-only laptop (Windows, macOS on Apple Silicon or Linux; Intel Macs aren't supported for Day 2):
+  - Day 2 relies on precomputed checkpoints (one SpatialData Zarr per notebook in the download). Live segmentation runs on one small tile only.
+  - Keep memory use modest (aim for 8–16 GB RAM laptops), and avoid loading whole images or all 2.1 million transcripts at once.
+  - The installation page and `pixi run check-full` must be done before the day. Plan time to chase attendees whose check fails.
+- **Transcripts on Day 2 only** (decided 2026-11-14). Day 1 has no transcript import.
 
 ## Programme (4 sessions/day, 09:30–17:00)
 | Day 1 (QuPath) | Day 2 (Python) |
@@ -99,7 +103,7 @@ The workshop environment is `pixi.toml` + `pixi.lock`, locked for linux-64, win-
   - Images: opening `morphology_focus/ch0000_dapi.ome.tif` in QuPath 0.7 loads all 35 channels (confirmed by the maintainer, 2026-11-13). Participants get the cropped `_if.ome.tif` instead.
   - Cell boundaries: there is no built-in importer. The preparation notebook converts them to QuPath GeoJSON (µm → pixels).
   - Transcripts: there is no supported route, only community scripts and an open request on [uw-loci/qupath-extension-cell-analysis-tools#25](https://github.com/uw-loci/qupath-extension-cell-analysis-tools/issues/25). Large GeoJSON files strain QuPath's importer.
-  - **Recommendation (not yet decided):** transcripts on Day 2 only, with at most a small points GeoJSON as a Day 1 demonstration.
+  - **Decided:** transcripts on Day 2 only (see Decisions made).
 - The 36 GB bundle is downloaded on the HPC; participants only download the Zenodo crop.
 
 ## Data findings (HPC inspection, 2026-11-13)
@@ -136,7 +140,7 @@ The workshop environment is `pixi.toml` + `pixi.lock`, locked for linux-64, win-
 ```
 README.md            workshop page (overview, registration, instructors, preparation, programme, venue, slides, FAQ)
 Pages/               Installation-Instructions.md, Data.md, Day1/ (session guides), Day2/
-qupath/              Day 1 classifiers + class lists (the project itself ships in the data download)
+qupath/              Day 1 classifiers + class lists (no project: participants build their own)
 notebooks/           05_data_model_and_loading … 08_spatial_and_next_steps
                      extra/prepare_xenium_dataset.ipynb (post-workshop: download + prepare the full slide; also builds the bundle)
 solutions/           completed notebooks with outputs
@@ -180,7 +184,4 @@ pixi.toml
 
 ## Open questions
 - Does QuPath ignore OME `Plane PositionX/PositionY`? Believed so; it doesn't matter under option A.
-- Ship a ready-made QuPath project in the download, or have participants build one in session 1?
-- Transcripts on Day 1: decide whether to adopt the Day 2-only recommendation in Dataset.
-- Compute platform; cohort size and dates.
-- Source and sharing terms of the original liver `.vsi` and `LungImg1.ome.tif` course images.
+- Source and sharing terms of the original liver `.vsi` and `LungImg1.ome.tif` course images (the maintainer is enquiring).
