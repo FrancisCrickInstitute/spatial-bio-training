@@ -6,7 +6,7 @@ The repo began as a fork of the [CellSurvey](https://github.com/FrancisCrickInst
 
 ## Status
 
-**2026-11-14:** steps 1 (teardown) and 2 (environment) are done and merged into `main`. Step 3 (data) is in progress: `notebooks/extra/prepare_xenium_dataset.ipynb` is written and checked on synthetic data, and its full run on the real data on the HPC is under way. No Day 2 session notebooks or Day 1 guides exist yet.
+**2026-11-14:** steps 1 (teardown) and 2 (environment) are done and merged into `main`. Step 3 (data) is in progress: `notebooks/extra/prepare_xenium_dataset.ipynb` ran successfully on the real data on the HPC (2026-11-14) and produced the workshop Zarr and the QuPath files. Still to do: a check in QuPath, then the Zenodo upload. No Day 2 session notebooks or Day 1 guides exist yet.
 
 The workshop environment is `pixi.toml` + `pixi.lock`, locked for linux-64, win-64 and osx-arm64. It uses Python 3.12, `sopa[instanseg]` 2.3, PyTorch, `spatialdata` 0.8, scanpy, squidpy, SegTraQ, napari (PyQt6) and JupyterLab, with no TensorFlow. Tasks:
 - `pixi run check` runs `Scripts/check_install.py`: imports, versions, compute device, Qt.
@@ -165,8 +165,14 @@ pixi.toml
      - Cause: the TIFF writer read 512-row strips back through the whole lazy chain from 10x's raw files, re-reading each 4096 × 4096 source tile about 8 times per channel and rebuilding the smaller pyramid levels from scratch.
      - Fixed: step 10 now writes the QuPath TIFFs from the Zarr just saved (it is already cropped and corrected, and stores every level), reading 2048-row strips aligned to its chunks. Rechecked on the synthetic data: the TIFF matches the Zarr pixel for pixel at every level.
    - Every `print` in the notebook now goes through `log()`, which also appends to `<OUTPUT_DIR>/prepare_log.txt` with timestamps. On a headless run, follow it with `tail -f` (nbconvert shows nothing until the end).
-   - **Next:** finish the full real-data run on the HPC and check its outputs: the Zarr round-trip and Sopa tile, and the OME-TIFFs and GeoJSON in QuPath (alignment of H&E, IF and annotations; responsiveness). Then upload the bundle to Zenodo and add the link to `README.md` and `Pages/Installation-Instructions.md`.
-   - Possible improvement for `XENIUM_CROP=full`: the notebook filters transcripts with dask (`points[inside].compute()`), which loads every transcript in the region. Fine for the crop; for the whole slide (77 M transcripts) it may need more memory than a laptop has. Filtering `transcripts.parquet` with pyarrow would be lighter.
+   - **Third real-data run succeeded (2026-11-14), in about 14 min end to end.** Outputs are in `/nemo/.../spatial-bio-training/workshop_data` on the HPC, alongside `prepare_log.txt` and `executed.ipynb`.
+     - Timings: reading 38 s, cropping about 20 s, Zarr write 722 s (now the slowest step, reading from the raw files), IF TIFF 45 s, H&E TIFF 16 s, Sopa check about 40 s.
+     - Contents: region 7059 × 7059 px = 1.50 × 1.50 mm; 16,045 cells, 16,202 nuclei, 2,096,052 transcripts; `table` 16,045 × 405, `protein` 16,045 × 27; offset removed from 27 channels; annotations in the crop are Tumor and Immune infiltration.
+     - Sopa + InstanSeg found 284 cells in the central 1024 px tile (about 6,000/mm²).
+     - Sizes: Zarr 934 MB, `_if.ome.tif` 805 MB, `_he.ome.tif` 150 MB, `_10x_cells.geojson` 17 MB, `_annotations.geojson` 9 KB. About 1.9 GB in total.
+     - **Alignment checked visually** on a 1/8-scale overlay of the exported TIFFs and GeoJSON: H&E nuclei coincide with DAPI across the crop, and the Tumor and Immune infiltration outlines follow the tissue.
+   - **Day 1 note:** PanCK is sparse and patchy in this crop, as is common in RCC, so it may not separate tumour from stroma well. Check candidate markers in QuPath before porting the IF exercise.
+   - **Next:** check the QuPath files in QuPath (responsiveness of the 35-channel TIFF and the 16,045-cell GeoJSON). Then upload the bundle to Zenodo, rerunning with `XENIUM_ZIP=1` or zipping the outputs, and add the link to `README.md` and `Pages/Installation-Instructions.md`.   - Possible improvement for `XENIUM_CROP=full`: the notebook filters transcripts with dask (`points[inside].compute()`), which loads every transcript in the region. Fine for the crop; for the whole slide (77 M transcripts) it may need more memory than a laptop has. Filtering `transcripts.parquet` with pyarrow would be lighter.
 4. **Day 2 notebooks**: 06 first (riskiest), then 05, 07, 08.
 5. **Day 1**: port the QuPath exercises to the RCC data and write the `Pages/Day1/` guides (QuPath GUI work, led by the instructors).
 
