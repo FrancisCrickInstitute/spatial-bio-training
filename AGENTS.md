@@ -6,7 +6,7 @@ The repo began as a fork of the [CellSurvey](https://github.com/FrancisCrickInst
 
 ## Status
 
-**2026-11-14:** steps 1 (teardown) and 2 (environment) are done and merged into `main`. Step 3 (data) is in progress: `notebooks/extra/prepare_xenium_dataset.ipynb` ran successfully on the real data on the HPC (2026-11-14) and produced the workshop Zarr and the QuPath files. The QuPath files have been checked in QuPath. Still to do: the Zenodo upload. No Day 2 session notebooks or Day 1 guides exist yet.
+**2026-11-14:** steps 1 (teardown) and 2 (environment) are done and merged into `main`. Step 3 (data) is in progress: `notebooks/extra/prepare_xenium_dataset.ipynb` ran successfully on the real data on the HPC (2026-11-14) and produced the workshop Zarr and the QuPath files. The QuPath files have been checked in QuPath. Still to do: the Zenodo upload. Step 4 has started: notebook 06 (segmentation and QC) is drafted but hasn't yet been run as a notebook (see Order of work). No other Day 2 notebooks or Day 1 guides exist yet.
 
 The workshop environment is `pixi.toml` + `pixi.lock`, locked for linux-64, win-64 and osx-arm64. It uses Python 3.12, `sopa[instanseg]` 2.3, PyTorch, `spatialdata` 0.8, scanpy, squidpy, SegTraQ, napari (PyQt6) and JupyterLab, with no TensorFlow. Tasks:
 - `pixi run check` runs `Scripts/check_install.py`: imports, versions, compute device, Qt.
@@ -178,7 +178,24 @@ pixi.toml
    - **QuPath check passed (maintainer, 2026-11-14):** the IF and H&E OME-TIFFs and both GeoJSON files load, line up and look good in QuPath 0.7.
    - **Next:** upload the bundle to Zenodo, rerunning with `XENIUM_ZIP=1` or zipping the outputs, and add the link to `README.md` and `Pages/Installation-Instructions.md`.
    - Possible improvement for `XENIUM_CROP=full`: the notebook filters transcripts with dask (`points[inside].compute()`), which loads every transcript in the region. Fine for the crop; for the whole slide (77 M transcripts) it may need more memory than a laptop has. Filtering `transcripts.parquet` with pyarrow would be lighter.
-4. **Day 2 notebooks**: 06 first (riskiest), then 05, 07, 08.
+4. **Day 2 notebooks**: 06 first (riskiest), then 05, 07, 08. Participants keep the workshop data in `data/` in the workshop folder (gitignored), so the notebooks read `../data/xenium_rcc_crop.zarr`. The installation page should say so once the Zenodo link exists.
+   - **06 drafted, NOT YET RUN AS A NOTEBOOK (2026-11-14).** Files: `notebooks/06_segmentation_and_qc.ipynb` (exercise cells are stubs) and `solutions/06_segmentation_and_qc.ipynb` (complete). Every API step was prototyped on the real crop, but the assembled notebook hasn't been executed end to end. Next: run the solution notebook, fix what breaks, check the figures, then commit both without outputs. The two versions were generated from one percent-format script whose `#> ` lines are the exercise stubs. The script and converter lived in the session scratchpad and may be lost, so treat the solution notebook as the source and keep the exercise version in step by hand (or add a small `Scripts/` converter).
+   - Structure: (1) choose a 440 µm region (`REGION = (530, 530, 970, 970)` µm, about 1,200 cells) with `bounding_box_query` in `microns`, copied into a new in-memory `SpatialData`; (2) 10x's segmentation (`segmentation_method`, a 100 µm zoom with DAPI and the boundary stain); (3) InstanSeg via Sopa with DAPI only, then DAPI + `ATP1A1/CD45/E-Cadherin` (exercise 1), plus `target="nuclei"`; (4) `sopa.aggregate` with `key_added="instanseg_table"` and both filters at 0, then `sopa.spatial.assign_transcript_to_cell`; (5) SegTraQ baseline and region similarity for 10x vs InstanSeg; (6) exercise 2: grow the outlines with `sopa.shapes.expand_radius(..., 0.5, no_overlap=True)` and remeasure; (7) optional whole-crop run (`RUN_WHOLE_CROP`, off by default).
+   - Measured on the maintainer's desktop (Xeon E5-2630 v4, 10 cores, 32 GB RAM, CPU only):
+     - InstanSeg: a 1024 px tile takes 12–15 s; the 2048 px region about 45 s; the **whole crop with DAPI only takes 370 s** and finds 14,610 cells (10x has 16,045). Too slow and risky to run live on 30 mixed laptops, hence the region plus the optional cell. The whole crop with DAPI + boundary stain hasn't been timed.
+     - Central 1024 px tile: DAPI only gives 284 cells (median 39 µm²); DAPI + boundary stain gives 315 cells (median 48 µm²).
+     - 2048 px central region: 10x has 1,212 cells, 19% of transcripts unassigned, median 72 transcripts per cell, median area 69 µm², nucleus–cell IoU 0.42, border admixture 0.10. InstanSeg (DAPI + boundary) has 1,252 cells, 47% unassigned, median 48 transcripts per cell, median area 47 µm², IoU 0.62, border admixture 0.095. SegTraQ baseline takes about 1 s and region similarity about 20 s on this region.
+     - Expanding the outlines (exercise 2) is not yet measured.
+   - **Sopa gotchas** found while prototyping:
+     - `sopa.settings.auto_save_on_disk` is on, so Sopa writes results into the Zarr of a backed `SpatialData`. Always segment an in-memory copy, never `sd.read_zarr(...)` of the workshop data directly.
+     - Sopa names its cells in 10x style (`aaaaaaaa-1`), which can be mistaken for 10x IDs.
+     - InstanSeg outlines are stored in image pixels (with transforms), while 10x outlines and transcripts are in µm. Use `sd.transform(..., to_coordinate_system="microns")`.
+     - `assign_transcript_to_cell(unassigned_value=0)` returns 1-based positions, not cell names.
+   - **SegTraQ 0.0.7 gotchas:**
+     - It wants one segmentation at a time, with fixed keys (`transcripts` with `cell_id`, `cell_boundaries` with index name `cell_id`, `table` with an `obs["cell_id"]`), in one unit. The notebook's `run_segtraq()` helper packages each segmentation in µm.
+     - It modifies the object it is given (it filters transcripts with qv < 20 and controls, and resets shapes indexes and CRS), so give it a copy.
+     - The workshop tables have no `x_centroid`/`y_centroid`; pass `tables_area_key=None` and both centroid keys as `None` so it computes them from the outlines.
+     - Pass `nucleus_shapes_cell_id_key=None`: nuclei are matched to cells by overlap.
 5. **Day 1**: port the QuPath exercises to the RCC data and write the `Pages/Day1/` guides (QuPath GUI work, led by the instructors).
    - **Adapt the IF exercise's markers to RCC.** PanCK is sparse and patchy in the workshop crop (common in RCC), so it won't separate tumour from stroma the way it did in the lung image. Choose more suitable markers instead (candidates to check in QuPath: E-Cadherin, Beta-catenin, Vimentin, CD31, alphaSMA).
 
