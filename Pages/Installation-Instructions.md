@@ -92,7 +92,7 @@ This checks that every package imports and reports whether a GPU is available. I
 Everything looks good. You're ready for the workshop.
 ```
 
-`Compute device for InstanSeg: cpu` is fine: the workshop is designed to run without a GPU. Warnings printed before the `[ OK ]` lines can be ignored.
+`Compute device for InstanSeg: cpu` is fine: the workshop is designed to run without a GPU. Warnings printed before the `[ OK ]` lines can be ignored, including `jar tool not found` while Java is being installed.
 
 If any line says `[FAIL]`, see [Troubleshooting](#troubleshooting), then send the full output to the organisers.
 
