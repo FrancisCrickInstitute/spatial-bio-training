@@ -84,7 +84,7 @@ From the workshop folder, run:
 pixi run check-full
 ```
 
-This checks that every package imports, reports whether a GPU is available, and downloads the InstanSeg model the notebooks use, then segments a small test image. It needs an internet connection the first time. The last lines should be:
+This checks that every package imports and reports whether a GPU is available. It then tests reading images through Bio-Formats, which downloads a Java runtime and the Bio-Formats library the first time (you don't need to install Java yourself, and the Java that comes with Fiji isn't used). Finally it downloads the InstanSeg model the notebooks use and segments a small test image. It needs an internet connection the first time. The last lines should be:
 
 ```text
 [ OK ] InstanSeg segmented a test image: ...
@@ -95,6 +95,8 @@ Everything looks good. You're ready for the workshop.
 `Compute device for InstanSeg: cpu` is fine: the workshop is designed to run without a GPU. Warnings printed before the `[ OK ]` lines can be ignored.
 
 If any line says `[FAIL]`, see [Troubleshooting](#troubleshooting), then send the full output to the organisers.
+
+A `[WARN]` line for Bio-Formats means the Java download didn't work, usually for the reasons under [Certificate errors](#certificate-errors-unknownissuer-certificate_verify_failed). You can still do the workshop, because the notebooks then read images without Java, but please try again on another network before the workshop.
 
 ## 6. Download the workshop data
 
@@ -114,7 +116,7 @@ Always start JupyterLab this way, from the workshop folder, so that it uses the 
 
 ### Certificate errors (`UnknownIssuer`, `CERTIFICATE_VERIFY_FAILED`)
 
-Some networks, VPNs and antivirus programs intercept secure (HTTPS) connections. pixi then fails with an error mentioning `UnknownIssuer` or invalid certificates, and the InstanSeg model download fails with `CERTIFICATE_VERIFY_FAILED`. The QuPath model and PyTorch downloads can fail the same way.
+Some networks, VPNs and antivirus programs intercept secure (HTTPS) connections. pixi then fails with an error mentioning `UnknownIssuer` or invalid certificates, and the InstanSeg model and Java/Bio-Formats downloads fail with `CERTIFICATE_VERIFY_FAILED`. The QuPath model and PyTorch downloads can fail the same way.
 
 Disconnect from the VPN, or use a different network (for example, at home), and try again. Once installed, everything works on any network.
 

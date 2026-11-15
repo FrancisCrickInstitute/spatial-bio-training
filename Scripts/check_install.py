@@ -3,7 +3,8 @@
 Run it with pixi from the repository root:
 
     pixi run check        # imports, versions, compute device
-    pixi run check-full   # also downloads the InstanSeg model and segments a test image
+    pixi run check-full   # also tests image reading (downloading Java and Bio-Formats on first run),
+                          # downloads the InstanSeg model and segments a test image
 
 If anything fails, send the full output to the workshop organisers before the course.
 """
@@ -11,6 +12,7 @@ If anything fails, send the full output to the workshop organisers before the co
 import argparse
 import importlib
 import importlib.metadata
+import logging
 import platform
 import sys
 import traceback
@@ -32,10 +34,17 @@ PACKAGES = [
     ("napari", "napari", "interactive image viewer"),
     ("napari_spatialdata", "napari-spatialdata", "SpatialData in napari"),
     ("jupyterlab", "jupyterlab", "notebooks"),
+    ("bioio", "bioio", "reading microscopy images"),
+    ("bioio_bioformats", "bioio-bioformats", "reading images through Bio-Formats"),
+    ("bioio_ome_tiff", "bioio-ome-tiff", "reading OME-TIFF without Java (fallback)"),
+    ("skimage", "scikit-image", "classic image analysis"),
+    ("geopandas", "geopandas", "outlines and GeoJSON"),
 ]
 
 OK = "[ OK ]"
+WARN = "[WARN]"
 FAIL = "[FAIL]"
+WARNINGS = []  # problems the workshop can work around
 
 
 def check_python():
@@ -142,6 +151,53 @@ def check_instanseg():
     return ok
 
 
+def check_image_reading():
+    """Read a tile from a small OME-TIFF through Bio-Formats, and through the pure-Python fallback.
+
+    The first Bio-Formats read downloads a Java runtime and the Bio-Formats library (first run only needs
+    internet). If that fails, the notebooks fall back to bioio-ome-tiff, so it is only a warning."""
+    import tempfile
+    from pathlib import Path
+
+    import bioio_bioformats
+    import bioio_ome_tiff
+    import numpy as np
+    import tifffile
+    from bioio import BioImage
+
+    data = np.random.default_rng(0).integers(0, 1000, (2, 512, 512), dtype=np.uint16)
+    expected = data[1, 100:300, 200:400]
+    with tempfile.TemporaryDirectory() as folder:
+        path = Path(folder) / "test.ome.tif"
+        tifffile.imwrite(path, data, ome=True, tile=(256, 256),
+                         metadata={"axes": "CYX", "Channel": {"Name": ["DAPI", "CD3E"]},
+                                   "PhysicalSizeX": 0.2125, "PhysicalSizeY": 0.2125})
+
+        def read_tile(reader, **kwargs):
+            image = BioImage(path, reader=reader, **kwargs)
+            tile = image.get_image_dask_data("YX", C=image.channel_names.index("CD3E"))[100:300, 200:400]
+            return np.array_equal(np.asarray(tile.compute()), expected)
+
+        ok = read_tile(bioio_ome_tiff.Reader)
+        print(f"{OK if ok else FAIL} Reading OME-TIFF without Java (bioio-ome-tiff)")
+
+        print("       Starting Bio-Formats (the first run downloads Java and Bio-Formats, and needs internet)...")
+        logging.getLogger("bioio").setLevel(logging.CRITICAL)  # it logs the same error again
+        try:
+            bf_ok = read_tile(bioio_bioformats.Reader, dask_tiles=True, tile_size=(256, 256))
+            print(f"{OK if bf_ok else WARN} Reading images through Bio-Formats")
+            if not bf_ok:
+                WARNINGS.append("Bio-Formats read the test image incorrectly")
+        except Exception as error:
+            WARNINGS.append("Bio-Formats isn't available")
+            print(f"{WARN} Bio-Formats isn't available: {type(error).__name__}: {str(error)[:300]}")
+            if "CERTIFICATE_VERIFY_FAILED" in str(error):
+                print("       Your network (or VPN, or antivirus) is probably intercepting HTTPS traffic.")
+                print("       Try again off the VPN or on another network.")
+            print("       The workshop still works without it: the notebooks use bioio-ome-tiff instead.")
+    return ok
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--full", action="store_true",
@@ -150,7 +206,7 @@ def main():
 
     print(f"Workshop environment check on {platform.system()} {platform.machine()}\n")
     results = [check_python(), check_imports()]
-    for check in [check_device, check_qt] + ([check_instanseg] if args.full else []):
+    for check in [check_device, check_qt] + ([check_image_reading, check_instanseg] if args.full else []):
         try:
             results.append(check())
         except Exception:
@@ -159,6 +215,10 @@ def main():
             traceback.print_exc()
 
     print()
+    if all(results) and WARNINGS:
+        print(f"Ready for the workshop, with warnings: {'; '.join(WARNINGS)}.")
+        print("See the [WARN] lines above. If you can, fix them before the workshop; the notebooks work either way.")
+        return 0
     if all(results):
         print("Everything looks good. You're ready for the workshop.")
         if not args.full:

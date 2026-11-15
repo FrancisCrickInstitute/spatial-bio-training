@@ -6,7 +6,7 @@ The repo began as a fork of the [CellSurvey](https://github.com/FrancisCrickInst
 
 ## Status
 
-**2026-11-14:** steps 1 (teardown) and 2 (environment) are done and merged into `main`. Step 3 (data) is in progress: `notebooks/extra/prepare_xenium_dataset.ipynb` ran successfully on the real data on the HPC (2026-11-14) and produced the workshop Zarr and the QuPath files. The QuPath files have been checked in QuPath. Still to do: the Zenodo upload. Step 4 has started: notebook 06 (segmentation and QC) is drafted. Its first end-to-end run (2026-11-15, on a 16 GB laptop-class Windows machine) got through cell 5, then stalled in the first InstanSeg run because the machine was swapping. With memory freed, InstanSeg on the session's region takes 30 s and peaks at 1.2 GB. The full rerun is next (see Order of work). No other Day 2 notebooks or Day 1 guides exist yet.
+**2026-11-14:** steps 1 (teardown) and 2 (environment) are done and merged into `main`. Step 3 (data) is in progress: `notebooks/extra/prepare_xenium_dataset.ipynb` ran successfully on the real data on the HPC (2026-11-14) and produced the workshop Zarr and the QuPath files. The QuPath files have been checked in QuPath. Still to do: the Zenodo upload. Step 4 has started: notebook 06 (segmentation and QC) is drafted. Its first end-to-end run (2026-11-15, on a 16 GB laptop-class Windows machine) got through cell 5, then stalled in the first InstanSeg run because the machine was swapping. With memory freed, InstanSeg on the session's region takes 30 s and peaks at 1.2 GB. The programme then changed (2026-11-15): a new session 5 notebook (classic segmentation and classifiers on the Day 1 OME-TIFF, read with bioio) comes first and is being planned; notebook 06 will gain a SpatialData introduction. No other Day 2 notebooks or Day 1 guides exist yet.
 
 The workshop environment is `pixi.toml` + `pixi.lock`, locked for linux-64, win-64 and osx-arm64. It uses Python 3.12, `sopa[instanseg]` 2.3, PyTorch, `spatialdata` 0.8, scanpy, squidpy, SegTraQ, napari (PyQt6) and JupyterLab, with no TensorFlow. Tasks:
 - `pixi run check` runs `Scripts/check_install.py`: imports, versions, compute device, Qt.
@@ -69,12 +69,24 @@ The workshop environment is `pixi.toml` + `pixi.lock`, locked for linux-64, win-
   - Keep memory use modest (aim for 8–16 GB RAM laptops), and avoid loading whole images or all 2.1 million transcripts at once.
   - The installation page and `pixi run check-full` must be done before the day. Plan time to chase attendees whose check fails.
 - **Transcripts on Day 2 only** (decided 2026-11-14). Day 1 has no transcript import.
+- **Session 5 = "From QuPath to Python"** (decided 2026-11-15). Before the full InstanSeg/Sopa analysis, participants redo a simple Day 1-style analysis in Python on a small tile (about 200 µm):
+  - open the **same OME-TIFF and GeoJSON they used in QuPath** (not the Zarr). It is the more transferable skill (their own data will be TIFFs and proprietary formats), and it gives SpatialData a reason to exist when transcripts arrive in session 6;
+  - threshold DAPI (manual, Otsu, a slider), split touching nuclei (distance transform + watershed), grow nuclei into cells (`expand_labels`), measure per-cell marker intensities (`regionprops_table`), and classify with single-marker thresholds combined into phenotypes (as in QuPath's composite classifier);
+  - **key exercise:** sweep the threshold and the expansion distance, and see how nucleus counts, cell areas and the percentage of a phenotype (e.g. CD8+ T cells) change. Segmentation choices change biological conclusions;
+  - end with InstanSeg on the same tile as a teaser, and save the outlines as GeoJSON (back to QuPath; a third segmentation for the SegTraQ comparison in session 6).
+  - The deeper SpatialData tour (why a container, coordinate systems, transcripts, tables, H&E alignment, loading Day 1 GeoJSON into the Zarr) moves to the start of session 6.
+- **Images are read with bioio, Bio-Formats first, pure Python as fallback** (decided 2026-11-15). Participants know Bio-Formats from Fiji.
+  - `BioImage(path, reader=bioio_bioformats.Reader, dask_tiles=True, tile_size=(512, 512))` reads only the tiles it needs. If that raises **anything**, fall back to `BioImage(path, reader=bioio_ome_tiff.Reader)`, which gives the same channel names, pixel size and dimensions but reads whole planes (about 100 MB per channel of the crop, so read only the channels needed). bioio picks `bioio-ome-tiff` by default for `.ome.tif`, so Bio-Formats must be requested explicitly.
+  - bioio-bioformats (through `bffile`) downloads its **own Java runtime (cjdk) and the Bio-Formats jars (Maven)** on first use. No installed Java is needed, and Fiji's bundled Java isn't used. A failed download surfaces as `UnsupportedFileFormatError` ("None of the specified readers were able to read this image"), with `CERTIFICATE_VERIFY_FAILED` inside it on intercepting networks. It failed that way in Claude Code's shell (2026-11-15); the fallback worked.
+  - Neither reader reads pyramid levels (both read level 0), so a whole-crop overview means downsampling a channel.
+  - `pixi run check-full` now tests both readers on a synthetic OME-TIFF: the fallback must pass, and a Bio-Formats failure is a `[WARN]` (the run still ends "Ready for the workshop, with warnings"). Bio-Formats via bioio hasn't yet been seen working on any machine: run `check-full` off the VPN.
+  - Dependencies added by the maintainer (2026-11-15): `bioio`, `bioio-bioformats`, `bioio-ome-tiff`, `scikit-image`, `geopandas` in `pixi.toml` (relocked) and `requirements.txt`.
 
 ## Programme (4 sessions/day, 09:30–17:00)
 | Day 1 (QuPath) | Day 2 (Python) |
 |---|---|
-| 1. Images + spatial-biology primer | 5. Notebooks, SpatialData/AnnData, loading Xenium + H&E + Day 1 GeoJSON |
-| 2. H&E workflow (tissue, regions, cells) | 6. Segmentation (InstanSeg via Sopa) + QC (SegTraQ, vs Xenium segmentation) + aggregation |
+| 1. Images + spatial-biology primer | 5. From QuPath to Python: notebooks, the Day 1 OME-TIFF + GeoJSON via bioio, classic segmentation + simple classifiers |
+| 2. H&E workflow (tissue, regions, cells) | 6. SpatialData Zarr (why a container, coordinates, transcripts, tables) + segmentation (InstanSeg via Sopa) + QC (SegTraQ, vs Xenium and session 5 segmentations) + aggregation |
 | 3. Multiplex IF workflow (InstanSeg, classifiers, phenotypes) | 7. Cell types (scanpy; compare with Day 1 phenotypes; RNA vs protein) |
 | 4. Spatial analysis + export | 8. Spatial stats/niches (squidpy, Delaunay + Louvain), back to QuPath, evaluating new tools |
 
@@ -141,7 +153,7 @@ The workshop environment is `pixi.toml` + `pixi.lock`, locked for linux-64, win-
 README.md            workshop page (overview, registration, instructors, preparation, programme, venue, slides, FAQ)
 Pages/               Installation-Instructions.md, Data.md, Day1/ (session guides), Day2/
 qupath/              Day 1 classifiers + class lists (no project: participants build their own)
-notebooks/           05_data_model_and_loading … 08_spatial_and_next_steps
+notebooks/           05_from_qupath_to_python, 06_segmentation_and_qc … 08_spatial_and_next_steps
                      extra/prepare_xenium_dataset.ipynb (post-workshop: download + prepare the full slide; also builds the bundle)
 solutions/           completed notebooks with outputs
 Scripts/             check_install.py, inspect_xenium.py (maintainer-only)
@@ -198,7 +210,7 @@ pixi.toml
    - **Region or whole crop (decided 2026-11-15):** the setup cell has `WHOLE_CROP = False`. When it's `True`, section 1 sets `REGION` to the whole crop (from the image size), and the *whole* session runs on it unchanged: segmentation, aggregation, SegTraQ and the exercises. This replaced a separate section 7 that only segmented the whole crop and compared cell counts. A whole-crop run means 3 InstanSeg runs of about 6 min each on the desktop, plus SegTraQ on about 16,000 cells (region similarity took about 20 s for 1,200 cells), so expect 30 min or more on a laptop. Not yet timed; memory at that scale is also untested.
    - Exercise/solution check: comparing the two notebooks cell by cell, they should differ only in the two exercise cells (`# Your code here`). Check this after every edit.
    - Measured on the maintainer's desktop (Xeon E5-2630 v4, 10 cores, 32 GB RAM, CPU only):
-     - InstanSeg: a 1024 px tile takes 12–15 s; the 2048 px region about 45 s; the **whole crop with DAPI only takes 370 s** and finds 14,610 cells (10x has 16,045). Too slow and risky to run live on 30 mixed laptops, hence the region plus the optional cell. The whole crop with DAPI + boundary stain hasn't been timed.
+     - InstanSeg: a 1024 px tile takes 12–15 s; the 2048 px region about 45 s; the **whole crop with DAPI only takes 370 s** and finds 14,610 cells (10x has 16,045). Too slow and risky to run live on 30 mixed laptops, hence the 440 µm region by default and `WHOLE_CROP` as an opt-in. The whole crop with DAPI + boundary stain hasn't been timed.
      - Central 1024 px tile: DAPI only gives 284 cells (median 39 µm²); DAPI + boundary stain gives 315 cells (median 48 µm²).
      - 2048 px central region: 10x has 1,212 cells, 19% of transcripts unassigned, median 72 transcripts per cell, median area 69 µm², nucleus–cell IoU 0.42, border admixture 0.10. InstanSeg (DAPI + boundary) has 1,252 cells, 47% unassigned, median 48 transcripts per cell, median area 47 µm², IoU 0.62, border admixture 0.095. SegTraQ baseline takes about 1 s and region similarity about 20 s on this region.
      - Expanding the outlines (exercise 2) is not yet measured.

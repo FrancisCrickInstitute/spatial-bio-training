@@ -52,8 +52,8 @@ You will work on your own laptop throughout: Windows, macOS on Apple Silicon (M1
 
 | Session | Topic |
 |---|---|
-| 5 | Jupyter notebooks, the SpatialData data model, loading the data |
-| 6 | Cell segmentation and quality control |
+| 5 | From QuPath to Python: Jupyter notebooks, opening the Day 1 images, classic segmentation and simple classifiers |
+| 6 | The SpatialData data model, transcripts, deep-learning cell segmentation and quality control |
 | 7 | Cell types: clustering and comparison with Day 1 |
 | 8 | Spatial statistics and niches, and where to go next |
 
