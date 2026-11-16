@@ -6,7 +6,13 @@ The repo began as a fork of the [CellSurvey](https://github.com/FrancisCrickInst
 
 ## Status
 
-**2026-11-14:** steps 1 (teardown) and 2 (environment) are done and merged into `main`. Step 3 (data) is in progress: `notebooks/extra/prepare_xenium_dataset.ipynb` ran successfully on the real data on the HPC (2026-11-14) and produced the workshop Zarr and the QuPath files. The QuPath files have been checked in QuPath. Still to do: the Zenodo upload. Step 4 has started: notebook 06 (segmentation and QC) is drafted. Its first end-to-end run (2026-11-15, on a 16 GB laptop-class Windows machine) got through cell 5, then stalled in the first InstanSeg run because the machine was swapping. With memory freed, InstanSeg on the session's region takes 30 s and peaks at 1.2 GB. The programme then changed (2026-11-15): a new session 5 notebook (classic segmentation and classifiers on the Day 1 OME-TIFF, read with bioio) comes first. It is drafted but not yet run end to end (see Order of work). Notebook 06 will gain a SpatialData introduction. No other Day 2 notebooks or Day 1 guides exist yet.
+**2026-11-16:**
+- **Steps 1 (teardown) and 2 (environment)** are done.
+- **Step 3 (data)** is nearly done. `notebooks/extra/prepare_xenium_dataset.ipynb` ran on the real data on the HPC (2026-11-14), and the QuPath files have been checked in QuPath. It now also writes the fields-of-view GeoJSON, so it must be **rerun on the HPC before the Zenodo upload**, which is still to do.
+- **Step 4 (Day 2 notebooks)** is under way. The solutions of **05** (From QuPath to Python), **06** (SpatialData, segmentation and QC) and **07** (cell types) all run end to end on the 128 GB workstation, in 19 s, 104 s and 50 s, each peaking at 1.0–1.4 GB.
+  - Still open for 05: the default threshold method (Otsu misses the dim tumour nuclei), a note on Yen finding no nuclei, and the marker thresholds.
+  - Still to do: time all three on a laptop-class machine with memory free; replace the stand-in reference phenotypes (used by 07) with the instructors' QuPath export; write notebook 08.
+- **No Day 1 guides exist yet.** Day 1 session 4 must end by exporting the classified cells for session 7 (see Decisions made).
 
 The workshop environment is `pixi.toml` + `pixi.lock`, locked for linux-64, win-64 and osx-arm64. It uses Python 3.12, `sopa[instanseg]` 2.3, PyTorch, `spatialdata` 0.8 (pinned below 0.9, see Updating package versions), scanpy, squidpy, SegTraQ, bioio (Bio-Formats + OME-TIFF), scikit-image, geopandas and JupyterLab, with no TensorFlow and no napari. Tasks:
 - `pixi run check` runs `Scripts/check_install.py`: imports, versions, compute device.
@@ -82,14 +88,16 @@ The workshop environment is `pixi.toml` + `pixi.lock`, locked for linux-64, win-
     - The `protein` table is skipped for RNA-only runs.
     - Image reading follows whatever XOA version spatialdata-io supports.
 - **Workshop logistics (decided 2026-11-14):** **25–26 February 2027**, for **20–30 participants**, on **their own laptops**. There is no shared compute, so everything must run on a typical CPU-only laptop (Windows, macOS on Apple Silicon or Linux; Intel Macs aren't supported for Day 2):
-  - Day 2 relies on precomputed checkpoints (one SpatialData Zarr per notebook in the download). Live segmentation runs on one small tile only.
+  - Live segmentation runs on small areas only: a 200 µm tile in session 5 and a 440 µm region in session 6 (`WHOLE_CROP` is an opt-in). Whole-crop analyses (session 7) use 10x's cells and tables from the workshop Zarr. Each notebook saves what the next one needs (`session5_cells.geojson`, `session6_cells.zarr`, `session7_cell_types.csv` in `data/`), and the next one falls back to the workshop data if a file is missing. There are no separate precomputed checkpoints in the download (this replaced the original plan of one Zarr per notebook).
   - Keep memory use modest (aim for 8–16 GB RAM laptops), and avoid loading whole images or all 2.1 million transcripts at once.
   - The installation page and `pixi run check-full` must be done before the day. Plan time to chase attendees whose check fails.
 - **Transcripts on Day 2 only** (decided 2026-11-14). Day 1 has no transcript import.
 - **Session 5 = "From QuPath to Python"** (decided 2026-11-15). Before the full InstanSeg/Sopa analysis, participants redo a simple Day 1-style analysis in Python on a small tile (about 200 µm):
   - open the **same OME-TIFF and GeoJSON they used in QuPath** (not the Zarr). It is the more transferable skill (their own data will be TIFFs and proprietary formats), and it gives SpatialData a reason to exist when transcripts arrive in session 6;
-  - threshold DAPI (manual, Otsu, a slider), split touching nuclei (distance transform + watershed), grow nuclei into cells (`expand_labels`), measure per-cell marker intensities (`regionprops_table`), and classify with single-marker thresholds combined into phenotypes (as in QuPath's composite classifier);
-  - **key exercise:** sweep the threshold and the expansion distance, and see how nucleus counts, cell areas and the percentage of a phenotype (e.g. CD8+ T cells) change. Segmentation choices change biological conclusions;
+  - threshold DAPI with **automatic methods** (Otsu, Li, Yen, Triangle, Isodata, Mean; `try_all_threshold`, like Fiji's "Try all") rather than a fixed value, linking back to the introductory workshop and to a QuPath limitation (its cell detection takes one fixed value);
+  - show that **no single threshold suits a large stitched image**, however it was chosen: compare one threshold for the whole image with one per field of view (the equivalent of the introductory workshop's "one value per image"), then local thresholding as the extreme;
+  - split touching nuclei (distance transform + watershed), grow nuclei into cells (`expand_labels`), measure per-cell marker intensities (`regionprops_table`), and classify with single-marker thresholds combined into phenotypes (as in QuPath's composite classifier);
+  - **key exercise:** sweep the threshold method and the expansion distance, and see how cell counts, cell areas and the percentage of a phenotype (e.g. CD8+ T cells) change. Segmentation choices change biological conclusions;
   - end with InstanSeg on the same tile as a teaser, and save the outlines as GeoJSON (back to QuPath; a third segmentation for the SegTraQ comparison in session 6).
   - The deeper SpatialData tour (why a container, coordinate systems, transcripts, tables, H&E alignment, loading Day 1 GeoJSON into the Zarr) moves to the start of session 6.
 - **Images are read with bioio, Bio-Formats first, pure Python as fallback** (decided 2026-11-15). Participants know Bio-Formats from Fiji.
@@ -179,7 +187,7 @@ Pages/               Installation-Instructions.md, Data.md, Day1/ (session guide
 qupath/              Day 1 classifiers + class lists (no project: participants build their own)
 notebooks/           05_from_qupath_to_python, 06_segmentation_and_qc, 07_cell_types, 08_spatial_and_next_steps
                      extra/prepare_xenium_dataset.ipynb (post-workshop: download + prepare the full slide; also builds the bundle)
-solutions/           completed notebooks with outputs
+solutions/           completed notebooks (committed without outputs so far; see Open questions)
 Scripts/             check_install.py; maintainer tools: inspect_xenium.py, make_fovs_geojson.py and the notebook tools below
 assets/
 pixi.toml
@@ -357,3 +365,4 @@ Run them with `pixi run python Scripts/<name>.py` (or the environment's own Pyth
 ## Open questions
 - Does QuPath ignore OME `Plane PositionX/PositionY`? Believed so; it doesn't matter under option A.
 - Source and sharing terms of the original liver `.vsi` and `LungImg1.ome.tif` course images (the maintainer is enquiring).
+- Should the solution notebooks be committed **with outputs**, so participants can read results without running anything? So far both versions are committed without outputs. Outputs would add images to git, and they would need regenerating whenever a notebook or the data changes.

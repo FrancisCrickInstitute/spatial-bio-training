@@ -193,7 +193,7 @@ def main():
 
     print(f"Workshop environment check on {platform.system()} {platform.machine()}\n")
     results = [check_python(), check_imports()]
-    for check in [check_device] +([check_image_reading, check_instanseg] if args.full else []):
+    for check in [check_device] + ([check_image_reading, check_instanseg] if args.full else []):
         try:
             results.append(check())
         except Exception:
