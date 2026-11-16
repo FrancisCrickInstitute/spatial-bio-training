@@ -73,7 +73,8 @@ def main():
         peak = max(peak, rss)
         figures = plt.get_fignums()
         for number in figures:
-            plt.figure(number).savefig(figure_dir / f"cell{index:02d}_fig{number}.png", dpi=80)
+            # bbox_inches="tight", as Jupyter's inline backend does, so labels and legends aren't cut off
+            plt.figure(number).savefig(figure_dir / f"cell{index:02d}_fig{number}.png", dpi=80, bbox_inches="tight")
         plt.close("all")
         print(f"--- cell {index}: {time.time() - start:6.1f} s, RSS {rss:4.1f} GB, {len(figures)} fig | {heading}")
         lines = [line for line in output.getvalue().strip().splitlines() if "% Completed |" not in line]  # dask bars

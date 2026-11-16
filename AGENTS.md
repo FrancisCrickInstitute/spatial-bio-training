@@ -98,6 +98,13 @@ The workshop environment is `pixi.toml` + `pixi.lock`, locked for linux-64, win-
   - Neither reader reads pyramid levels (both read level 0), so a whole-crop overview means downsampling a channel.
   - `pixi run check-full` now tests both readers on a synthetic OME-TIFF: the fallback must pass, and a Bio-Formats failure is a `[WARN]` (the run still ends "Ready for the workshop, with warnings"). **Bio-Formats via bioio works** (maintainer's Windows machine, off the VPN, 2026-11-15): the first `check-full` downloaded Azul Zulu JRE 11.0.33 (38.6 MB) into `%LOCALAPPDATA%\cjdk\cache` plus the Bio-Formats jars, then read the test tile correctly. Later runs work from the cache with no network, including in Claude Code's shell. The line `jar tool not found at ...\bin\jar.exe` during that first run is harmless (the JRE has no `jar` tool). macOS and Linux are untested.
   - Dependencies added by the maintainer (2026-11-15): `bioio`, `bioio-bioformats`, `bioio-ome-tiff`, `scikit-image`, `geopandas` in `pixi.toml` (relocked) and `requirements.txt`.
+- **Session 7 = a worked example, then the same on the participants' own work** (decided 2026-11-16). The pattern may suit session 8 too.
+  - **Worked example (everyone sees the same results):** 10x's cells for the whole crop (the `table` and `protein` tables in the workshop Zarr), compared with **reference Day 1 phenotypes** for those same cells. They join exactly, because each object's `name` is its 10x cell ID.
+  - **Exercise 3 (own work):** the participant's InstanSeg cells from session 6 (`data/session6_cells.zarr`, written at the end of notebook 06), compared with their **own Day 1 phenotypes** (`data/day1_cells.geojson`, exported in Day 1 session 4). The two segmentations don't share IDs, so cells are matched by position: each session 6 cell gets the class of the Day 1 cell containing its centre.
+  - **Fallbacks:** without `session6_cells.zarr`, 10x's cells in the session 6 region; without `day1_cells.geojson`, the reference phenotypes. The notebook says which it used.
+  - **This sets two requirements outside the notebooks:**
+    - **Day 1 session 4** must have participants export their classified cells from QuPath as GeoJSON (File › Export objects as GeoJSON, "Export as FeatureCollection"), saved as `data/day1_cells.geojson` in the workshop folder. Their cells must have classifications, and must cover the session 6 region (x 820–1260, y 720–1160 µm), for the matching to be useful.
+    - **The instructors** must make the reference file `qupath/xenium_rcc_crop_10x_phenotypes.geojson` in QuPath: import `xenium_rcc_crop_10x_cells.geojson` into the IF image, add intensity features, classify with single-measurement classifiers combined into a composite classifier, and export as GeoJSON. It must keep each cell's `name` (its 10x ID). It then goes into the Zenodo bundle. Until then, `Scripts/make_reference_phenotypes.py` writes a **stand-in** of the same shape (see Notebook tools).
 
 ## Programme (4 sessions/day, 09:30–17:00)
 | Day 1 (QuPath) | Day 2 (Python) |
@@ -170,7 +177,7 @@ The workshop environment is `pixi.toml` + `pixi.lock`, locked for linux-64, win-
 README.md            workshop page (overview, registration, instructors, preparation, programme, venue, slides, FAQ)
 Pages/               Installation-Instructions.md, Data.md, Day1/ (session guides), Day2/
 qupath/              Day 1 classifiers + class lists (no project: participants build their own)
-notebooks/           05_from_qupath_to_python, 06_segmentation_and_qc … 08_spatial_and_next_steps
+notebooks/           05_from_qupath_to_python, 06_segmentation_and_qc, 07_cell_types, 08_spatial_and_next_steps
                      extra/prepare_xenium_dataset.ipynb (post-workshop: download + prepare the full slide; also builds the bundle)
 solutions/           completed notebooks with outputs
 Scripts/             check_install.py; maintainer tools: inspect_xenium.py, make_fovs_geojson.py and the notebook tools below
@@ -185,6 +192,7 @@ Run them with `pixi run python Scripts/<name>.py` (or the environment's own Pyth
 - `run_notebook_cells.py NOTEBOOK FIG_DIR [first] [last]`: runs a notebook's code cells without Jupyter, from the notebook's folder. Prints the time, the process memory and the output of each cell, including the value of its last expression, saves figures as PNGs and stops at the first error. Uses `psutil`, which comes in with the environment's other packages but isn't declared.
 - `check_exercises.py`: compares every `notebooks/*.ipynb` with its `solutions/` copy and lists the cells that differ. Only the exercise cells should differ.
 - `show_notebook_cells.py NOTEBOOK TEXT...`: prints the cells containing some text, with their indexes.
+- `make_reference_phenotypes.py [ZARR] [QUPATH_DIR]`: writes the **stand-in** `xenium_rcc_crop_10x_phenotypes.geojson` (10x's cells, as QuPath detections named by 10x cell ID, classified from the `protein` table). The classifier uses one threshold per marker, from Otsu on arcsinh(x/5), rounded: CD3E 8, CD8A 7, CD4 3, CD20 8, CD68 6, CD163 3.5, CD31 5, αSMA 3.5. The first matching rule wins: CD8+ T, CD4+ T, Other T, B cell, Macrophage, Endothelial, Smooth muscle, Other. Replace its output with the instructors' QuPath export when it exists.
 - `make_fovs_geojson.py OUTS_DIR OUTPUT [crop]`: writes `<NAME>_fovs.geojson` from 10x's raw `outs` folder, using the same logic as the preparation notebook. Keep the two in step.
 - Editing notebooks by script: Git stores the `.ipynb` files with LF and checks them out with CRLF (`core.autocrlf`). Normalise to LF before matching text, and check the result with `json.loads` before writing.
 
@@ -306,7 +314,24 @@ Run them with `pixi run python Scripts/<name>.py` (or the environment's own Pyth
        - Section numbers: 1 SpatialData, 2 region, 3 10x, 4 InstanSeg, 5 aggregation, 6 SegTraQ, 7 session 5 cells, 8 exercise (grow the cells).
      - **Next:** time a full run on the 16 GB machine with memory free.
      - Running cells headless: nbconvert shows nothing until the end, so use `Scripts/run_notebook_cells.py` (see Notebook tools).
-   - Exercise/solution sync: the solution notebook is the source. Edit both versions the same way, and run `Scripts/check_exercises.py` afterwards.
+     - **Save step added (2026-11-16):** a last section writes the participant's `instanseg_cells` outlines and `instanseg_table` (key `table`) to `../data/session6_cells.zarr` (1 s; 1,315 cells), for session 7.
+   - **07 drafted; the solution runs end to end (2026-11-16).** Files: `notebooks/07_cell_types.ipynb` and `solutions/07_cell_types.ipynb` (42 cells; 3 exercise cells). On the 128 GB workstation it took 50 s in total, with a peak of 1.0 GB. All figures were checked.
+     - Sections:
+       1. two tables (counts vs intensities), filtering cells with fewer than 20 transcripts (14,261 of 16,045 kept), `normalise_rna()` (normalize_total + log1p) and `normalise_protein()` (arcsinh(x/5) + scale);
+       2. `cluster()`: PCA 30, 15 neighbours, UMAP and Leiden 0.5 (igraph), giving 9 clusters in about 30 s. Exercise 1 tries resolutions 0.2 and 1.0 (6 and 12 clusters);
+       3. `MARKERS` (9 cell types, 4 panel genes each), a dot plot, and `name_clusters()` (`sc.tl.score_genes`, highest mean score per cluster). Exercise 2 checks the names against the top 5 genes from `rank_genes_groups`;
+       4. a map of the crop, coloured by cell type;
+       5. protein means per RNA cell type (matrixplot); CD8A RNA vs protein per cell (Spearman 0.54); protein-only clusters (15) against the RNA types (ARI 0.34);
+       6. the reference Day 1 phenotypes, joined by ID, as a crosstab;
+       7. exercise 3 on the participant's own cells and Day 1 phenotypes, with fallbacks;
+       8. 10x cell types saved to `../data/session7_cell_types.csv` (cell_id, leiden, cell_type) for session 8.
+     - **Panel caveat:** the panel lacks the classic ccRCC markers (CA9, NDUFA4L2, PAX8, PAX2). The tumour list uses MET, CDH2, KRT8 and CAV1, which are data-driven (the top genes of the tumour cluster); the notebook says so. Also absent: COL1A1/COL3A1/DCN/LUM, LYZ, C1QA/B, JCHAIN, TPSAB1, CXCL13, SPP1, APOE.
+     - RNA clusters at resolution 0.5, all named correctly by `name_clusters()`: B cell 1,157; T cell 2,705; Macrophage 2,819; Tumour 1,427; Fibroblast 1,925; Smooth muscle 1,595; Lymphatic endothelium 710; Plasma cell 166; Blood endothelium 1,757.
+     - Against the stand-in reference: B cells 81% B; blood endothelium 78% Endothelial; T cells 61% CD8+ and 18% CD4+; macrophages 64%; tumour 85% Other (no tumour marker in the Day 1 classifier). **Plasma cells are 87% "Other T cell"**: they are CD3E-bright in the protein data (cross-reactivity or spill-over); the notebook asks about it.
+     - Exercise 3 on the saved session 6 cells: 1,226 of 1,315 matched a reference cell by position; 6 cell types (no B, plasma or lymphatic cells in this tumour region).
+     - scanpy turns string `obs` columns into categoricals behind the scenes, so `cell_type_map()` converts to `object` before `fillna`.
+     - **Next:** replace the stand-in reference with the instructors' QuPath export; time a run on a laptop-class machine; settle the Day 1 session 4 export (see Decisions).
+   - Exercise/solution sync: the solution notebook is the source. Edit both versions the same way, and run `Scripts/check_exercises.py` afterwards. (Notebook 07 was generated from a builder script in the session scratchpad; treat the solution notebook as its source from now on.)
    - Structure, before the 2026-11-16 restructure (see above for the current one): (1) choose a 440 µm region (`REGION = [530, 530, 970, 970]` µm, about 1,200 cells) with `bounding_box_query` in `microns`, copied into a new in-memory `SpatialData`; (2) 10x's segmentation (`segmentation_method`, a 100 µm zoom with DAPI and the boundary stain); (3) InstanSeg via Sopa with DAPI only, then DAPI + `ATP1A1/CD45/E-Cadherin` (exercise 1), plus `target="nuclei"`; (4) `sopa.aggregate` with `key_added="instanseg_table"` and both filters at 0, then `sopa.spatial.assign_transcript_to_cell`; (5) SegTraQ baseline and region similarity for 10x vs InstanSeg; (6) exercise 2: grow the outlines with `sopa.shapes.expand_radius(..., 0.5, no_overlap=True)` and remeasure.
    - **Region or whole crop (decided 2026-11-15):** the setup cell has `WHOLE_CROP = False`. When it's `True`, section 1 sets `REGION` to the whole crop (from the image size), and the *whole* session runs on it unchanged: segmentation, aggregation, SegTraQ and the exercises. This replaced a separate section 7 that only segmented the whole crop and compared cell counts. A whole-crop run means 3 InstanSeg runs of about 6 min each on the desktop, plus SegTraQ on about 16,000 cells (region similarity took about 20 s for 1,200 cells), so expect 30 min or more on a laptop. Not yet timed; memory at that scale is also untested.
    - Exercise/solution check: comparing the two notebooks cell by cell, they should differ only in the two exercise cells (`# Your code here`). Check this after every edit.
@@ -326,6 +351,7 @@ Run them with `pixi run python Scripts/<name>.py` (or the environment's own Pyth
      - The workshop tables have no `x_centroid`/`y_centroid`; pass `tables_area_key=None` and both centroid keys as `None` so it computes them from the outlines.
      - Pass `nucleus_shapes_cell_id_key=None`: nuclei are matched to cells by overlap.
 5. **Day 1**: port the QuPath exercises to the RCC data and write the `Pages/Day1/` guides (QuPath GUI work, led by the instructors).
+   - **Session 4 must end with exporting the classified cells** as `data/day1_cells.geojson` (see the session 7 decision). The instructors also make the reference phenotype file for 10x's cells.
    - **Adapt the IF exercise's markers to RCC.** PanCK is sparse and patchy in the workshop crop (common in RCC), so it won't separate tumour from stroma the way it did in the lung image. Choose more suitable markers instead (candidates to check in QuPath: E-Cadherin, Beta-catenin, Vimentin, CD31, alphaSMA).
 
 ## Open questions
