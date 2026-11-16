@@ -173,12 +173,20 @@ qupath/              Day 1 classifiers + class lists (no project: participants b
 notebooks/           05_from_qupath_to_python, 06_segmentation_and_qc … 08_spatial_and_next_steps
                      extra/prepare_xenium_dataset.ipynb (post-workshop: download + prepare the full slide; also builds the bundle)
 solutions/           completed notebooks with outputs
-Scripts/             check_install.py, inspect_xenium.py (maintainer-only)
+Scripts/             check_install.py; maintainer tools: inspect_xenium.py, make_fovs_geojson.py and the notebook tools below
 assets/
 pixi.toml
 ```
 
 `assets/` still holds two CellSurvey output figures. They can be replaced once the workshop data produces its own.
+
+### Notebook tools (`Scripts/`, maintainer-only, added 2026-11-16)
+Run them with `pixi run python Scripts/<name>.py` (or the environment's own Python, `.pixi/envs/default/python.exe`). They can be removed from the repo later if they stop being useful.
+- `run_notebook_cells.py NOTEBOOK FIG_DIR [first] [last]`: runs a notebook's code cells without Jupyter, from the notebook's folder. Prints the time, the process memory and the output of each cell, including the value of its last expression, saves figures as PNGs and stops at the first error. Uses `psutil`, which comes in with the environment's other packages but isn't declared.
+- `check_exercises.py`: compares every `notebooks/*.ipynb` with its `solutions/` copy and lists the cells that differ. Only the exercise cells should differ.
+- `show_notebook_cells.py NOTEBOOK TEXT...`: prints the cells containing some text, with their indexes.
+- `make_fovs_geojson.py OUTS_DIR OUTPUT [crop]`: writes `<NAME>_fovs.geojson` from 10x's raw `outs` folder, using the same logic as the preparation notebook. Keep the two in step.
+- Editing notebooks by script: Git stores the `.ipynb` files with LF and checks them out with CRLF (`core.autocrlf`). Normalise to LF before matching text, and check the result with `json.loads` before writing.
 
 ## Large and private files
 - `qupath_content/` (the original QuPath course) is **gitignored**. Copy only classifiers and class lists from it into `qupath/`.
@@ -255,7 +263,7 @@ pixi.toml
        - Meanwhile, `data/qupath/xenium_rcc_crop_fovs.geojson` on the maintainer's machine was written with the same code from the extracted JSON, as a local stand-in for developing session 5.
        - The README text the notebook writes into the bundle doesn't mention the FOV file yet.
      - **Next:** decide the marker thresholds and the default `METHOD` (see the first run above), import the saved GeoJSON into QuPath, and time the notebook on a laptop-class machine. Then update notebook 06's start: a SpatialData introduction, and the session 5 GeoJSON as a third segmentation in SegTraQ.
-     - Tools used while drafting lived in the session scratchpad and may be lost: the percent-format source `nb05.py`, the converter `py_to_nb.py` (lines beginning `#> ` are the exercise stubs) and the runner `run_cells.py` (runs cells in turn, times them, saves figures, stops at the first error). If they're gone, treat the solution notebook as the source. Moving the converter and runner into `Scripts/` would avoid this. Participants keep the workshop data in `data/` in the workshop folder (gitignored), so the notebooks read `../data/xenium_rcc_crop.zarr`. The installation page should say so once the Zenodo link exists.
+     - The percent-format source and converter used to draft the notebook are lost; the solution notebook is the source. Participants keep the workshop data in `data/` in the workshop folder (gitignored), so the notebooks read `../data/xenium_rcc_crop.zarr`. The installation page should say so once the Zenodo link exists.
    - **06 drafted; first end-to-end run INCOMPLETE (2026-11-15).** Files: `notebooks/06_segmentation_and_qc.ipynb` (exercise cells are stubs) and `solutions/06_segmentation_and_qc.ipynb` (complete). Every API step was prototyped on the real crop on the 32 GB desktop (below).
      - The run used the maintainer's Windows machine: 15.4 GB RAM, with about 2.5 GB free even when idle, because PyCharm, Firefox, CrashPlan, Dropbox and OneDrive were open. That is close to the laptops participants will bring. The workshop Zarr was copied from the HPC into `data/`, which took 14.5 min over the `Z:` share at about 1 MB/s. The copy is identical: 942 files, 972,143,490 bytes.
      - **Fixed:** `REGION` must be a list, not a tuple. `sd.bounding_box_query` (spatialdata 0.8) converts only lists to arrays, and fails on a tuple slice with `'tuple' object has no attribute 'dtype'`. Changed in both notebooks.
@@ -269,8 +277,8 @@ pixi.toml
        - So InstanSeg on the region fits a laptop comfortably. **Participants need several GB of free RAM**, so the installation page and the session should tell them to close other apps. The notebook's time estimates ("less than a minute" per step) hold on this machine.
      - Sopa warns "Running without parallelization backend can be slow" and suggests `sopa.settings.parallelization_backend = 'dask'`. It isn't needed at region scale; untested for the whole-crop cell.
      - **Next:** rerun the solution notebook end to end on this machine with memory free, check the figures, then commit both notebooks without outputs.
-     - Running cells headless: nbconvert shows nothing until the end. A small runner that `exec`s each code cell in turn, timing each, saving figures (Agg backend) and stopping at the first error, is quicker to debug with. It lived in the session scratchpad, so it may need rewriting.
-   - Exercise/solution sync: the two versions were generated from one percent-format script whose `#> ` lines are the exercise stubs. The script and converter lived in the session scratchpad and may be lost, so treat the solution notebook as the source and keep the exercise version in step by hand (or add a small `Scripts/` converter).
+     - Running cells headless: nbconvert shows nothing until the end, so use `Scripts/run_notebook_cells.py` (see Notebook tools).
+   - Exercise/solution sync: the solution notebook is the source. Edit both versions the same way, and run `Scripts/check_exercises.py` afterwards.
    - Structure: (1) choose a 440 µm region (`REGION = [530, 530, 970, 970]` µm, about 1,200 cells) with `bounding_box_query` in `microns`, copied into a new in-memory `SpatialData`; (2) 10x's segmentation (`segmentation_method`, a 100 µm zoom with DAPI and the boundary stain); (3) InstanSeg via Sopa with DAPI only, then DAPI + `ATP1A1/CD45/E-Cadherin` (exercise 1), plus `target="nuclei"`; (4) `sopa.aggregate` with `key_added="instanseg_table"` and both filters at 0, then `sopa.spatial.assign_transcript_to_cell`; (5) SegTraQ baseline and region similarity for 10x vs InstanSeg; (6) exercise 2: grow the outlines with `sopa.shapes.expand_radius(..., 0.5, no_overlap=True)` and remeasure.
    - **Region or whole crop (decided 2026-11-15):** the setup cell has `WHOLE_CROP = False`. When it's `True`, section 1 sets `REGION` to the whole crop (from the image size), and the *whole* session runs on it unchanged: segmentation, aggregation, SegTraQ and the exercises. This replaced a separate section 7 that only segmented the whole crop and compared cell counts. A whole-crop run means 3 InstanSeg runs of about 6 min each on the desktop, plus SegTraQ on about 16,000 cells (region similarity took about 20 s for 1,200 cells), so expect 30 min or more on a laptop. Not yet timed; memory at that scale is also untested.
    - Exercise/solution check: comparing the two notebooks cell by cell, they should differ only in the two exercise cells (`# Your code here`). Check this after every edit.
