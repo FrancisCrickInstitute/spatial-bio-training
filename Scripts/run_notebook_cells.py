@@ -76,9 +76,11 @@ def main():
             plt.figure(number).savefig(figure_dir / f"cell{index:02d}_fig{number}.png", dpi=80)
         plt.close("all")
         print(f"--- cell {index}: {time.time() - start:6.1f} s, RSS {rss:4.1f} GB, {len(figures)} fig | {heading}")
-        text = output.getvalue().strip()
-        if text:
-            print("    " + "\n    ".join(text.splitlines()[:40]))
+        lines = [line for line in output.getvalue().strip().splitlines() if "% Completed |" not in line]  # dask bars
+        if len(lines) > 60:  # keep the start and the end, where a cell's displayed value is
+            lines = lines[:20] + [f"[... {len(lines) - 40} lines ...]"] + lines[-40:]
+        if lines:
+            print("    " + "\n    ".join(lines))
         sys.stdout.flush()
     print(f"=== done in {time.time() - start_all:.0f} s, peak RSS {peak:.1f} GB")
 

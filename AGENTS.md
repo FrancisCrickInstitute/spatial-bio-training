@@ -264,7 +264,18 @@ Run them with `pixi run python Scripts/<name>.py` (or the environment's own Pyth
        - The README text the notebook writes into the bundle doesn't mention the FOV file yet.
      - **Next:** decide the marker thresholds and the default `METHOD` (see the first run above), import the saved GeoJSON into QuPath, and time the notebook on a laptop-class machine. Then update notebook 06's start: a SpatialData introduction, and the session 5 GeoJSON as a third segmentation in SegTraQ.
      - The percent-format source and converter used to draft the notebook are lost; the solution notebook is the source. Participants keep the workshop data in `data/` in the workshop folder (gitignored), so the notebooks read `../data/xenium_rcc_crop.zarr`. The installation page should say so once the Zenodo link exists.
-   - **06 drafted; first end-to-end run INCOMPLETE (2026-11-15).** Files: `notebooks/06_segmentation_and_qc.ipynb` (exercise cells are stubs) and `solutions/06_segmentation_and_qc.ipynb` (complete). Every API step was prototyped on the real crop on the 32 GB desktop (below).
+   - **06 drafted; the solution runs end to end (2026-11-16).** Files: `notebooks/06_segmentation_and_qc.ipynb` (exercise cells are stubs) and `solutions/06_segmentation_and_qc.ipynb` (complete). Every API step was prototyped on the real crop on the 32 GB desktop (below).
+     - **First complete run (2026-11-16)** on the 128 GB workstation (spatialdata 0.8.0, region mode): 93 s in total, peak process memory 1.3 GB. Each InstanSeg run took 13–14 s, and SegTraQ about 11 s per segmentation. All five figures were checked: region overview, 10x zoom, the three segmentations, QC histograms and the expanded outlines.
+     - **Fixed:** the exercise 2 setup cell (growing the outlines) had never run. `sopa.shapes.expand_radius` returns a GeoDataFrame whose `.attrs` still holds the transforms, so passing `transformations=` to `ShapesModel.parse` raised "Transformations are both specified for the element and also passed as an argument". It now clears `.attrs` first, in both notebooks (the same gotcha as cropping spatialdata-io elements).
+     - Region results: 10x 1,231 cells; InstanSeg with DAPI only 1,117 (median 37.5 µm²), with DAPI + boundary 1,290 (47.8 µm²), nuclei 1,332.
+     - SegTraQ (10x / InstanSeg / InstanSeg grown by half the mean radius):
+       - transcripts outside every cell: 19% / 47% / 22%;
+       - median transcripts per cell: 71 / 48 / 74.5; median genes per cell: 31 / 24 / 32;
+       - median area: 69 / 48 / 91 µm²;
+       - nucleus–cell IoU: 0.43 / 0.62 / 0.34;
+       - border admixture: 0.06 / 0.07 / 0.06.
+       - Growing the outlines recovers most transcripts without raising admixture, but cells become larger than 10x's and IoU drops. A good discussion point for the exercise.
+     - Runs on the 16 GB laptop-class machine are still to be timed with memory free.
      - The run used the maintainer's Windows machine: 15.4 GB RAM, with about 2.5 GB free even when idle, because PyCharm, Firefox, CrashPlan, Dropbox and OneDrive were open. That is close to the laptops participants will bring. The workshop Zarr was copied from the HPC into `data/`, which took 14.5 min over the `Z:` share at about 1 MB/s. The copy is identical: 942 files, 972,143,490 bytes.
      - **Fixed:** `REGION` must be a list, not a tuple. `sd.bounding_box_query` (spatialdata 0.8) converts only lists to arrays, and fails on a tuple slice with `'tuple' object has no attribute 'dtype'`. Changed in both notebooks.
      - Per-cell timings on that machine: imports + `read_zarr` 77 s; overview figure 2.6 s; region query 6.5 s; 10x zoom figure 3.0 s. Both figures were produced.
@@ -276,7 +287,7 @@ Run them with `pixi run python Scripts/<name>.py` (or the environment's own Pyth
        - Imports took 14 s, against 77 s in the stalled run, which is further evidence of swapping then.
        - So InstanSeg on the region fits a laptop comfortably. **Participants need several GB of free RAM**, so the installation page and the session should tell them to close other apps. The notebook's time estimates ("less than a minute" per step) hold on this machine.
      - Sopa warns "Running without parallelization backend can be slow" and suggests `sopa.settings.parallelization_backend = 'dask'`. It isn't needed at region scale; untested for the whole-crop cell.
-     - **Next:** rerun the solution notebook end to end on this machine with memory free, check the figures, then commit both notebooks without outputs.
+     - **Next:** time a full run on the 16 GB machine with memory free. Then restructure the start (a SpatialData introduction) and add the session 5 outlines as a third segmentation in SegTraQ.
      - Running cells headless: nbconvert shows nothing until the end, so use `Scripts/run_notebook_cells.py` (see Notebook tools).
    - Exercise/solution sync: the solution notebook is the source. Edit both versions the same way, and run `Scripts/check_exercises.py` afterwards.
    - Structure: (1) choose a 440 µm region (`REGION = [530, 530, 970, 970]` µm, about 1,200 cells) with `bounding_box_query` in `microns`, copied into a new in-memory `SpatialData`; (2) 10x's segmentation (`segmentation_method`, a 100 µm zoom with DAPI and the boundary stain); (3) InstanSeg via Sopa with DAPI only, then DAPI + `ATP1A1/CD45/E-Cadherin` (exercise 1), plus `target="nuclei"`; (4) `sopa.aggregate` with `key_added="instanseg_table"` and both filters at 0, then `sopa.spatial.assign_transcript_to_cell`; (5) SegTraQ baseline and region similarity for 10x vs InstanSeg; (6) exercise 2: grow the outlines with `sopa.shapes.expand_radius(..., 0.5, no_overlap=True)` and remeasure.
@@ -286,7 +297,7 @@ Run them with `pixi run python Scripts/<name>.py` (or the environment's own Pyth
      - InstanSeg: a 1024 px tile takes 12–15 s; the 2048 px region about 45 s; the **whole crop with DAPI only takes 370 s** and finds 14,610 cells (10x has 16,045). Too slow and risky to run live on 30 mixed laptops, hence the 440 µm region by default and `WHOLE_CROP` as an opt-in. The whole crop with DAPI + boundary stain hasn't been timed.
      - Central 1024 px tile: DAPI only gives 284 cells (median 39 µm²); DAPI + boundary stain gives 315 cells (median 48 µm²).
      - 2048 px central region: 10x has 1,212 cells, 19% of transcripts unassigned, median 72 transcripts per cell, median area 69 µm², nucleus–cell IoU 0.42, border admixture 0.10. InstanSeg (DAPI + boundary) has 1,252 cells, 47% unassigned, median 48 transcripts per cell, median area 47 µm², IoU 0.62, border admixture 0.095. SegTraQ baseline takes about 1 s and region similarity about 20 s on this region.
-     - Expanding the outlines (exercise 2) is not yet measured.
+     - Expanding the outlines (exercise 2) on the region: see the 2026-11-16 run above.
    - **Sopa gotchas** found while prototyping:
      - `sopa.settings.auto_save_on_disk` is on, so Sopa writes results into the Zarr of a backed `SpatialData`. Always segment an in-memory copy, never `sd.read_zarr(...)` of the workshop data directly.
      - Sopa names its cells in 10x style (`aaaaaaaa-1`), which can be mistaken for 10x IDs.
