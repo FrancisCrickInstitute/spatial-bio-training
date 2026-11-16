@@ -21,7 +21,9 @@ python = ">=3.12,<3.13"
 [pypi-dependencies]
 # Reading, segmenting and aggregating spatial data (InstanSeg via Sopa; pulls in PyTorch)
 sopa = { version = ">=2.3.0,<3", extras = ["instanseg"] }
-spatialdata = ">=0.8.0"
+# Pinned below 0.9 until the notebooks and the workshop Zarr are retested on 0.9
+# (see "Updating package versions" in AGENTS.md).
+spatialdata = ">=0.8.0,<0.9"
 spatialdata-io = ">=0.7"
 spatialdata-plot = ">=0.4.0"
 

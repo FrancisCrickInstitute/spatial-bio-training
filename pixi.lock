@@ -240,7 +240,6 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/a8/ac/fde1f9f99ebe7d8b989bb0005883b69f35abd6ac2d677e0a0caf23f29961/imagecodecs-2025.11.11-cp311-abi3-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/a8/c0/2dfab7b319dabe23f5a7b515a797c74b501d15c72e7a03837cf0cf779b9e/matplotlib_scalebar-0.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a9/16/7757fb84c819accc7d7e9af5291b261e4abb8627ee040f99e7d35ef2457a/anyio-4.16.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/aa/9c/e3dd674b9aa6057563dc22421bba567936d5fb80bc93b1c6995a96f49f2a/spatialdata-0.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ab/60/27e29790ff15ea0a485b8dc200d514328294f956e4abc3d43d88c0b5338d/semver-3.1.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ac/1b/ea72dd62f26ce3e0a7870b85148b75a5987507629b712deebeb87f7cce9a/nvidia_cudnn_cu13-9.26.0.51-py3-none-manylinux_2_27_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/ac/f7/653d9774d62d17efe8a9ceb6982387aa02bf2641e3112fb8a2a8557f34ec/python_utils-4.2.2-py3-none-any.whl
@@ -279,6 +278,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/cd/cb/44c0c0f3ecf280adddd7e98ebb78c08650b54532975e02aa0da313e30eca/scverse_misc-0.1.8-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/cd/f5/3dd85d583e55be76cd02b1fc9bbec771b12d63124b01661d9535ccf8721f/annotated_doc-0.0.6-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/cf/01/74405093d36dfb8fcf27368284bb7f0a8e4784dfcaf69104e4eb66434bbb/pydantic_zarr-0.11.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/cf/08/f5cac3e58d1bb092bfb6015104e6cce925bbe10a2cae44428c790d4e5d06/spatialdata-0.8.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/cf/82/8ef9c7e0f50493307a49c09cfa7f00c5a778b6d1921f7b2dabe1d3a5809e/narwhals-2.28.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d0/09/cab56a48b7e83609831c96f36658f9e30421877875071f2413eb591cf756/array_api_compat-1.16.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d0/5a/8ef888a4f56fa2ea5c10a7d6ff02286f503a93ea298bcaa9f51a41a20df8/spatial_image-1.2.3-py3-none-any.whl
@@ -527,7 +527,6 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/a7/03/921a3d3c75785aca9ebfbfcabfbc3a1be12e2ab5265deb026d55a5a3f83e/tqdm-4.70.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a8/c0/2dfab7b319dabe23f5a7b515a797c74b501d15c72e7a03837cf0cf779b9e/matplotlib_scalebar-0.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a9/16/7757fb84c819accc7d7e9af5291b261e4abb8627ee040f99e7d35ef2457a/anyio-4.16.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/aa/9c/e3dd674b9aa6057563dc22421bba567936d5fb80bc93b1c6995a96f49f2a/spatialdata-0.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ab/60/27e29790ff15ea0a485b8dc200d514328294f956e4abc3d43d88c0b5338d/semver-3.1.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ac/f7/653d9774d62d17efe8a9ceb6982387aa02bf2641e3112fb8a2a8557f34ec/python_utils-4.2.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ad/66/0d785f0bc5e4315a96c989bb476d0fc07ea4f85132550c7b156ca2035d52/traitlets-5.16.1-py3-none-any.whl
@@ -565,6 +564,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/cd/cb/44c0c0f3ecf280adddd7e98ebb78c08650b54532975e02aa0da313e30eca/scverse_misc-0.1.8-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/cd/f5/3dd85d583e55be76cd02b1fc9bbec771b12d63124b01661d9535ccf8721f/annotated_doc-0.0.6-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/cf/01/74405093d36dfb8fcf27368284bb7f0a8e4784dfcaf69104e4eb66434bbb/pydantic_zarr-0.11.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/cf/08/f5cac3e58d1bb092bfb6015104e6cce925bbe10a2cae44428c790d4e5d06/spatialdata-0.8.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/cf/82/8ef9c7e0f50493307a49c09cfa7f00c5a778b6d1921f7b2dabe1d3a5809e/narwhals-2.28.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d0/09/cab56a48b7e83609831c96f36658f9e30421877875071f2413eb591cf756/array_api_compat-1.16.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d0/5a/8ef888a4f56fa2ea5c10a7d6ff02286f503a93ea298bcaa9f51a41a20df8/spatial_image-1.2.3-py3-none-any.whl
@@ -807,7 +807,6 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/a7/03/921a3d3c75785aca9ebfbfcabfbc3a1be12e2ab5265deb026d55a5a3f83e/tqdm-4.70.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a8/c0/2dfab7b319dabe23f5a7b515a797c74b501d15c72e7a03837cf0cf779b9e/matplotlib_scalebar-0.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a9/16/7757fb84c819accc7d7e9af5291b261e4abb8627ee040f99e7d35ef2457a/anyio-4.16.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/aa/9c/e3dd674b9aa6057563dc22421bba567936d5fb80bc93b1c6995a96f49f2a/spatialdata-0.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ab/60/27e29790ff15ea0a485b8dc200d514328294f956e4abc3d43d88c0b5338d/semver-3.1.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ac/f7/653d9774d62d17efe8a9ceb6982387aa02bf2641e3112fb8a2a8557f34ec/python_utils-4.2.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ad/26/097597787a6b0db265d6e5cbb90881fe9d2ecebf1bbf063450d112da4524/mahotas-1.4.19-cp312-cp312-win_amd64.whl
@@ -847,6 +846,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/cd/f5/3dd85d583e55be76cd02b1fc9bbec771b12d63124b01661d9535ccf8721f/annotated_doc-0.0.6-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ce/dd/e5ee2cc1295fc76ad8cd26ae4ec001358edbc9d4c4e7a465c136133d38cf/pywinpty-3.1.2-cp312-cp312-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/cf/01/74405093d36dfb8fcf27368284bb7f0a8e4784dfcaf69104e4eb66434bbb/pydantic_zarr-0.11.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/cf/08/f5cac3e58d1bb092bfb6015104e6cce925bbe10a2cae44428c790d4e5d06/spatialdata-0.8.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/cf/82/8ef9c7e0f50493307a49c09cfa7f00c5a778b6d1921f7b2dabe1d3a5809e/narwhals-2.28.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/cf/eb/94dee516c846bd9382c3f566d8f8e5fb9e90599e45afeb697f9fc2533528/google_crc32c-1.9.0-cp312-cp312-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/d0/09/cab56a48b7e83609831c96f36658f9e30421877875071f2413eb591cf756/array_api_compat-1.16.0-py3-none-any.whl
@@ -5811,44 +5811,6 @@ packages:
   - typing-extensions>=4.16.0 ; python_full_version < '3.15'
   - trio>=0.32.0 ; extra == 'trio'
   requires_python: '>=3.10'
-- pypi: https://files.pythonhosted.org/packages/aa/9c/e3dd674b9aa6057563dc22421bba567936d5fb80bc93b1c6995a96f49f2a/spatialdata-0.9.0-py3-none-any.whl
-  name: spatialdata
-  version: 0.9.0
-  sha256: 34ad035b4c5eae20aa8de69c5376aeea05672503d01c9ad6788b67556cf0ac57
-  requires_dist:
-  - anndata>=0.9.1
-  - annsel>=0.1.2
-  - click
-  - dask-image
-  - dask>=2026.3
-  - datashader
-  - distributed>=2026.3
-  - fsspec[http,s3]
-  - geopandas>=0.14
-  - multiscale-spatial-image==2.0.3
-  - networkx
-  - numba>=0.55
-  - numpy
-  - ome-zarr>=0.16
-  - pandas
-  - pooch
-  - pyarrow
-  - rich
-  - scikit-image
-  - scipy!=1.17
-  - scverse-misc[datasets]>=0.1
-  - shapely>=2.0.1
-  - spatial-image>=1.2.3
-  - typing-extensions>=4.8
-  - universal-pathlib>=0.2.6
-  - xarray-spatial>=0.3.5
-  - xarray>=2024.10
-  - zarr>=3
-  - napari-spatialdata[all] ; extra == 'extra'
-  - spatialdata-io ; extra == 'extra'
-  - spatialdata-plot ; extra == 'extra'
-  - torch ; extra == 'torch'
-  requires_python: '>=3.12'
 - pypi: https://files.pythonhosted.org/packages/ab/60/27e29790ff15ea0a485b8dc200d514328294f956e4abc3d43d88c0b5338d/semver-3.1.2-py3-none-any.whl
   name: semver
   version: 3.1.2
@@ -6638,6 +6600,44 @@ packages:
   - typing-extensions>=4.6
   - zarr-metadata>=0.8.0
   - zarr>=3.0.0 ; extra == 'zarr'
+  requires_python: '>=3.12'
+- pypi: https://files.pythonhosted.org/packages/cf/08/f5cac3e58d1bb092bfb6015104e6cce925bbe10a2cae44428c790d4e5d06/spatialdata-0.8.0-py3-none-any.whl
+  name: spatialdata
+  version: 0.8.0
+  sha256: 75139b0df0e27c4573141a8dbe6b3301b47231571505926ad6a633c046ec1010
+  requires_dist:
+  - anndata>=0.9.1
+  - annsel>=0.1.2
+  - click
+  - dask-image
+  - dask>=2026.3.0
+  - datashader
+  - distributed>=2026.3.0
+  - fsspec[http,s3]
+  - geopandas>=0.14
+  - multiscale-spatial-image==2.0.3
+  - networkx
+  - numba>=0.55.0
+  - numpy
+  - ome-zarr>=0.16.0
+  - pandas
+  - pooch
+  - pyarrow
+  - rich
+  - scikit-image
+  - scipy!=1.17.0
+  - setuptools
+  - shapely>=2.0.1
+  - spatial-image>=1.2.3
+  - typing-extensions>=4.8.0
+  - universal-pathlib>=0.2.6
+  - xarray-spatial>=0.3.5
+  - xarray>=2024.10.0
+  - zarr>=3.0.0
+  - napari-spatialdata[all] ; extra == 'extra'
+  - spatialdata-io ; extra == 'extra'
+  - spatialdata-plot ; extra == 'extra'
+  - torch ; extra == 'torch'
   requires_python: '>=3.12'
 - pypi: https://files.pythonhosted.org/packages/cf/82/8ef9c7e0f50493307a49c09cfa7f00c5a778b6d1921f7b2dabe1d3a5809e/narwhals-2.28.0-py3-none-any.whl
   name: narwhals

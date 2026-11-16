@@ -8,7 +8,7 @@ The repo began as a fork of the [CellSurvey](https://github.com/FrancisCrickInst
 
 **2026-11-14:** steps 1 (teardown) and 2 (environment) are done and merged into `main`. Step 3 (data) is in progress: `notebooks/extra/prepare_xenium_dataset.ipynb` ran successfully on the real data on the HPC (2026-11-14) and produced the workshop Zarr and the QuPath files. The QuPath files have been checked in QuPath. Still to do: the Zenodo upload. Step 4 has started: notebook 06 (segmentation and QC) is drafted. Its first end-to-end run (2026-11-15, on a 16 GB laptop-class Windows machine) got through cell 5, then stalled in the first InstanSeg run because the machine was swapping. With memory freed, InstanSeg on the session's region takes 30 s and peaks at 1.2 GB. The programme then changed (2026-11-15): a new session 5 notebook (classic segmentation and classifiers on the Day 1 OME-TIFF, read with bioio) comes first. It is drafted but not yet run end to end (see Order of work). Notebook 06 will gain a SpatialData introduction. No other Day 2 notebooks or Day 1 guides exist yet.
 
-The workshop environment is `pixi.toml` + `pixi.lock`, locked for linux-64, win-64 and osx-arm64. It uses Python 3.12, `sopa[instanseg]` 2.3, PyTorch, `spatialdata` 0.8, scanpy, squidpy, SegTraQ, bioio (Bio-Formats + OME-TIFF), scikit-image, geopandas and JupyterLab, with no TensorFlow and no napari. Tasks:
+The workshop environment is `pixi.toml` + `pixi.lock`, locked for linux-64, win-64 and osx-arm64. It uses Python 3.12, `sopa[instanseg]` 2.3, PyTorch, `spatialdata` 0.8 (pinned below 0.9, see Updating package versions), scanpy, squidpy, SegTraQ, bioio (Bio-Formats + OME-TIFF), scikit-image, geopandas and JupyterLab, with no TensorFlow and no napari. Tasks:
 - `pixi run check` runs `Scripts/check_install.py`: imports, versions, compute device.
 - `pixi run check-full` also downloads the InstanSeg model and segments a synthetic image.
 - `pixi run lab` starts JupyterLab.
@@ -20,6 +20,21 @@ The workshop environment is `pixi.toml` + `pixi.lock`, locked for linux-64, win-
 - **Don't restore the CellSurvey code.** Point to upstream [CellSurvey](https://github.com/FrancisCrickInstitute/CellSurvey) instead. An `upstream` git remote (SSH; HTTPS fails certificate checks on the maintainer's machine) may be configured for fetching it.
 - **Keep participant-facing text and the plan in step.** The programme in `README.md` mirrors the table below.
 - **The maintainer stages and commits.** Leave changes unstaged.
+- **The maintainer runs pixi commands** (`pixi lock`, `pixi install`, `pixi update`, `pixi run ...`). Don't run them; say which command is needed. `pixi lock --check` (pixi 0.72) re-solved and rewrote `pixi.lock` instead of only checking it.
+
+## Updating package versions (between workshops)
+`pixi.lock` pins every package to the versions the material was tested with, so participants all get the same environment. The ecosystem moves fast (spatialdata, Sopa, spatialdata-io, SegTraQ, InstanSeg), so **update the environment deliberately before each run of the workshop**, early enough to fix what breaks: at least a month before, and not in the final week.
+
+- **Any `pixi lock` can upgrade packages.** It resolves the newest versions `pixi.toml` allows, even when only an unrelated dependency changed. On 2026-11-16, removing napari also moved spatialdata from 0.8.0 to 0.9.0. Check the lock diff for version changes to the core packages every time.
+- **Current upper pins** (temporary, to be lifted once retested):
+  - `spatialdata <0.9` (added 2026-11-16): the workshop Zarr and notebooks 05/06 were built and tested on 0.8.
+- **Update procedure:**
+  1. Lift or raise the pins in `pixi.toml` (and `requirements.txt`), then `pixi update` (or `pixi lock`) and read the version changes in the lock diff.
+  2. `pixi run check-full` on Windows, macOS and Linux.
+  3. Rerun the preparation notebook. If spatialdata's Zarr format changed, the Zenodo bundle needs rebuilding and re-uploading, and the links updating.
+  4. Run every solution notebook end to end on the new environment, on a laptop-class machine.
+  5. Recheck the version-specific gotchas recorded below (they name the versions they were found on) and update or remove them.
+  6. Update the versions named in this file.
 
 ## Decisions made
 - **Keep this repo and its history.** No new repo.
