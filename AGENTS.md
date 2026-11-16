@@ -8,8 +8,8 @@ The repo began as a fork of the [CellSurvey](https://github.com/FrancisCrickInst
 
 **2026-11-14:** steps 1 (teardown) and 2 (environment) are done and merged into `main`. Step 3 (data) is in progress: `notebooks/extra/prepare_xenium_dataset.ipynb` ran successfully on the real data on the HPC (2026-11-14) and produced the workshop Zarr and the QuPath files. The QuPath files have been checked in QuPath. Still to do: the Zenodo upload. Step 4 has started: notebook 06 (segmentation and QC) is drafted. Its first end-to-end run (2026-11-15, on a 16 GB laptop-class Windows machine) got through cell 5, then stalled in the first InstanSeg run because the machine was swapping. With memory freed, InstanSeg on the session's region takes 30 s and peaks at 1.2 GB. The programme then changed (2026-11-15): a new session 5 notebook (classic segmentation and classifiers on the Day 1 OME-TIFF, read with bioio) comes first. It is drafted but not yet run end to end (see Order of work). Notebook 06 will gain a SpatialData introduction. No other Day 2 notebooks or Day 1 guides exist yet.
 
-The workshop environment is `pixi.toml` + `pixi.lock`, locked for linux-64, win-64 and osx-arm64. It uses Python 3.12, `sopa[instanseg]` 2.3, PyTorch, `spatialdata` 0.8, scanpy, squidpy, SegTraQ, napari (PyQt6) and JupyterLab, with no TensorFlow. Tasks:
-- `pixi run check` runs `Scripts/check_install.py`: imports, versions, compute device, Qt.
+The workshop environment is `pixi.toml` + `pixi.lock`, locked for linux-64, win-64 and osx-arm64. It uses Python 3.12, `sopa[instanseg]` 2.3, PyTorch, `spatialdata` 0.8, scanpy, squidpy, SegTraQ, bioio (Bio-Formats + OME-TIFF), scikit-image, geopandas and JupyterLab, with no TensorFlow and no napari. Tasks:
+- `pixi run check` runs `Scripts/check_install.py`: imports, versions, compute device.
 - `pixi run check-full` also downloads the InstanSeg model and segments a synthetic image.
 - `pixi run lab` starts JupyterLab.
 
@@ -23,6 +23,7 @@ The workshop environment is `pixi.toml` + `pixi.lock`, locked for linux-64, win-
 
 ## Decisions made
 - **Keep this repo and its history.** No new repo.
+- **No napari** (decided 2026-11-16). There's no time for napari-spatialdata in the programme, and QuPath covers interactive viewing. napari, napari-spatialdata and the Qt check in `check_install.py` were removed, which also drops Qt from the environment. Session 8 can still mention napari-spatialdata as a pointer.
 - **One dataset across both days:** the 10x **Xenium Protein FFPE human renal cell carcinoma** (RCC) section, with transcripts, a 27-plex protein panel and post-Xenium H&E, all on the same section (see Dataset). Both hands-on tests passed on 2026-11-13: spatialdata-io reads it, and QuPath loads all 35 channels. The former fallback was BioImage Archive **S-BIAD1093** (Xenium + COMET IF, but no H&E). A cropped region is published on Zenodo as the workshop download.
 - **Day 1 = the existing one-day Introduction to QuPath course** (Sara Salgueiro Torres, CALM STP, QuPath v0.7; source material in `qupath_content/`), ported to the workshop dataset. **No Groovy scripting**: Python is the only scripting language taught. Session 4 becomes spatial analysis (density maps, distances, Delaunay) plus export for Day 2.
 - **InstanSeg on both days**: QuPath's InstanSeg extension on Day 1, and `sopa.segmentation.instanseg` (Sopa ≥ 2.3, `sopa[instanseg]`) on Day 2, using the same `fluorescence_nuclei_and_cells` model. Pass `pixel_size`, or it may return no cells. The workshop environment needs **no TensorFlow**.

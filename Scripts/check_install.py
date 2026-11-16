@@ -31,8 +31,6 @@ PACKAGES = [
     ("segtraq", "segtraq", "segmentation quality control"),
     ("torch", "torch", "deep learning backend for InstanSeg"),
     ("instanseg", "instanseg-torch", "cell segmentation"),
-    ("napari", "napari", "interactive image viewer"),
-    ("napari_spatialdata", "napari-spatialdata", "SpatialData in napari"),
     ("jupyterlab", "jupyterlab", "notebooks"),
     ("bioio", "bioio", "reading microscopy images"),
     ("bioio_bioformats", "bioio-bioformats", "reading images through Bio-Formats"),
@@ -83,17 +81,6 @@ def check_device():
     if device == "cpu":
         print("       No GPU found. That's fine for the workshop: live segmentation uses a small tile.")
     return True
-
-
-def check_qt():
-    try:
-        import qtpy
-
-        print(f"{OK} Qt binding for napari: {qtpy.API_NAME} (Qt {qtpy.QT_VERSION})")
-        return True
-    except Exception as error:
-        print(f"{FAIL} Qt binding for napari: {type(error).__name__}: {error}")
-        return False
 
 
 def make_test_image(size=256, pixel_size_um=0.5, seed=0):
@@ -206,7 +193,7 @@ def main():
 
     print(f"Workshop environment check on {platform.system()} {platform.machine()}\n")
     results = [check_python(), check_imports()]
-    for check in [check_device, check_qt] + ([check_image_reading, check_instanseg] if args.full else []):
+    for check in [check_device] +([check_image_reading, check_instanseg] if args.full else []):
         try:
             results.append(check())
         except Exception:

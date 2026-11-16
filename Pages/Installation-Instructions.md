@@ -13,6 +13,8 @@ You will need:
 
 Supported systems are **Windows** (64-bit), **macOS** on Apple Silicon (M1 or later), and **Linux** (64-bit). Macs with Intel processors are not supported for Day 2. You do not need a GPU.
 
+Your laptop needs at least **8 GB of memory (RAM)**, and 16 GB is better, plus about **10 GB of free disk space**: about 3 GB for the Python environment, 2 GB for the workshop data, and room for pixi's download cache.
+
 ## 1. Download the workshop materials
 
 Either:
@@ -92,6 +94,8 @@ This checks that every package imports and reports whether a GPU is available. I
 Everything looks good. You're ready for the workshop.
 ```
 
+If a check gave a warning, the last line starts `Ready for the workshop, with warnings:` instead (see `[WARN]` below).
+
 `Compute device for InstanSeg: cpu` is fine: the workshop is designed to run without a GPU. Warnings printed before the `[ OK ]` lines can be ignored, including `jar tool not found` while Java is being installed.
 
 If any line says `[FAIL]`, see [Troubleshooting](#troubleshooting), then send the full output to the organisers.
@@ -111,6 +115,8 @@ pixi run lab
 ```
 
 Always start JupyterLab this way, from the workshop folder, so that it uses the workshop environment rather than another Python installation.
+
+**Close other programs before the Day 2 sessions**, especially web browsers with many tabs, IDEs and cloud-sync apps. Cell segmentation needs a few GB of free memory. If your laptop runs short, it starts using the disk instead, and a step that should take under a minute can run for half an hour or more.
 
 ## Troubleshooting
 
