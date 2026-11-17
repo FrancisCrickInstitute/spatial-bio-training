@@ -50,12 +50,14 @@ You will work on your own laptop throughout: Windows, macOS on Apple Silicon (M1
 
 ## Day 2: spatial omics in Python
 
-| Session | Topic |
-|---|---|
-| 5 | From QuPath to Python: Jupyter notebooks, opening the Day 1 images, classic segmentation and simple classifiers |
-| 6 | The SpatialData data model, transcripts, deep-learning cell segmentation and quality control |
-| 7 | Cell types: clustering and comparison with Day 1 |
-| 8 | Spatial statistics and niches, and where to go next |
+| Session | Topic | Notebook |
+|---|---|---|
+| 5 | From QuPath to Python: Jupyter notebooks, opening the Day 1 images, classic segmentation and simple classifiers | [05](notebooks/05_from_qupath_to_python.ipynb) |
+| 6 | The SpatialData data model, transcripts, deep-learning cell segmentation and quality control | [06](notebooks/06_segmentation_and_qc.ipynb) |
+| 7 | Cell types: clustering and comparison with Day 1 | [07](notebooks/07_cell_types.ipynb) |
+| 8 | Spatial statistics and niches, and where to go next | [08](notebooks/08_spatial_and_next_steps.ipynb) |
+
+Completed versions of the notebooks are in [`solutions/`](solutions/).
 
 # Venue
 
@@ -67,9 +69,21 @@ TBC
 
 # Additional material
 
-- [CellSurvey](https://github.com/FrancisCrickInstitute/CellSurvey): a pipeline that runs the Day 2 analysis end to end, built on [Sopa](https://gustaveroussy.github.io/sopa/).
+- [CellSurvey](https://github.com/FrancisCrickInstitute/CellSurvey): a pipeline that runs the Day 2 analysis end to end, built on [Sopa](https://prism-oncology.github.io/sopa).
 - [Introduction to image analysis](https://github.com/FrancisCrickInstitute/introduction-to-image-analysis): our general image-analysis workshop.
 
 # FAQ
 
 TBC
+
+# Development status
+
+*For the organisers; this section will be removed before the workshop.* The full list, with details, is under "Remaining work" in [`AGENTS.md`](AGENTS.md).
+
+All four Day 2 notebooks are drafted and run end to end; they are being tested. Still to do:
+
+- **Data:** rerun the preparation notebook (it now also exports the fields of view), upload the bundle to Zenodo, and add the link to this page and the installation instructions.
+- **Day 2:** finish reviewing the notebooks; time them on a typical laptop; check the exported GeoJSON files in QuPath; decide whether the solutions are published with outputs.
+- **Day 1:** port the QuPath exercises to this dataset and write the session guides; make the reference cell phenotypes in QuPath; end session 4 with the export that session 7 uses.
+- **Installation:** test on macOS (Apple Silicon) and Linux; add the organisers' contact details; update the package versions about a month before the workshop.
+- **This page:** instructors, venue, slides, registration and FAQ.

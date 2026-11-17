@@ -6,13 +6,18 @@ The repo began as a fork of the [CellSurvey](https://github.com/FrancisCrickInst
 
 ## Status
 
-**2026-11-16:**
+**2026-11-17: a complete first draft of the Day 2 material exists, and work is paused while the maintainer tests it.**
 - **Steps 1 (teardown) and 2 (environment)** are done.
 - **Step 3 (data)** is nearly done. `notebooks/extra/prepare_xenium_dataset.ipynb` ran on the real data on the HPC (2026-11-14), and the QuPath files have been checked in QuPath. It now also writes the fields-of-view GeoJSON, so it must be **rerun on the HPC before the Zenodo upload**, which is still to do.
-- **Step 4 (Day 2 notebooks)** is under way. The solutions of **05** (From QuPath to Python), **06** (SpatialData, segmentation and QC) and **07** (cell types) all run end to end on the 128 GB workstation, in 19 s, 104 s and 50 s, each peaking at 1.0–1.4 GB.
-  - 05's threshold decisions were made on 2026-11-16: Triangle by default, and marker thresholds read from the histograms (see Order of work).
-  - Still to do: time all three on a laptop-class machine with memory free; replace the stand-in reference phenotypes (used by 07) with the instructors' QuPath export; write notebook 08.
+- **Step 4 (Day 2 notebooks)**: all four are drafted, and every solution runs end to end:
+  - **05** From QuPath to Python;
+  - **06** SpatialData, segmentation and QC;
+  - **07** cell types;
+  - **08** spatial statistics, niches and evaluating tools (added 2026-11-17).
+
+  Timings: 19 s, 104 s and 50 s for 05–07 on the 128 GB workstation; 08 took 41 s on the 32 GB desktop. Each peaked at 0.7–1.4 GB. The maintainer is now reading through all four notebooks.
 - **No Day 1 guides exist yet.** Day 1 session 4 must end by exporting the classified cells for session 7 (see Decisions made).
+- **Everything still to do is listed under [Remaining work](#remaining-work).**
 
 The workshop environment is `pixi.toml` + `pixi.lock`, locked for linux-64, win-64 and osx-arm64. It uses Python 3.12, `sopa[instanseg]` 2.3, PyTorch, `spatialdata` 0.8 (pinned below 0.9, see Updating package versions), scanpy, squidpy, SegTraQ, bioio (Bio-Formats + OME-TIFF), scikit-image, geopandas and JupyterLab, with no TensorFlow and no napari. Tasks:
 - `pixi run check` runs `Scripts/check_install.py`: imports, versions, compute device.
@@ -288,7 +293,7 @@ Run them with `pixi run python Scripts/<name>.py` (or the environment's own Pyth
      - **FOV grid added to the data bundle (decided 2026-11-15).** The preparation notebook now has `fov_boxes()` (section 6): it reads the JSON (extracted, or straight from `aux_outputs.tar.gz` with `tarfile`), falls back to `fov_name` extents in the transcripts, and returns `None` if neither exists. Boxes are crop-local and clipped to the region. Section 10 writes `<NAME>_fovs.geojson` into `qupath/` as annotations classed "Field of view" (colour 0, 200, 200).
        - Tested against the real JSON and the crop's transcripts through all four routes (JSON, tar.gz, fallback, none). The 2026-11-14 bundle doesn't have the file, so **rerun the preparation notebook on the HPC before the Zenodo upload**.
        - Meanwhile, `data/qupath/xenium_rcc_crop_fovs.geojson` on the maintainer's machine was written with the same code from the extracted JSON, as a local stand-in for developing session 5.
-       - The README text the notebook writes into the bundle doesn't mention the FOV file yet.
+       - The README text the notebook writes into the bundle mentions the FOV file (added 2026-11-17).
      - **Next:** check the CD3E and CD68 thresholds visually at full resolution, import the saved GeoJSON into QuPath, and time the notebook on a laptop-class machine. (Notebook 06 now has the SpatialData introduction and compares the session 5 cells; done 2026-11-16.)
      - The percent-format source and converter used to draft the notebook are lost; the solution notebook is the source. Participants keep the workshop data in `data/` in the workshop folder (gitignored), so the notebooks read `../data/xenium_rcc_crop.zarr`. The installation page should say so once the Zenodo link exists.
    - **06 drafted; the solution runs end to end (2026-11-16).** Files: `notebooks/06_segmentation_and_qc.ipynb` (exercise cells are stubs) and `solutions/06_segmentation_and_qc.ipynb` (complete). Every API step was prototyped on the real crop on the 32 GB desktop (below).
@@ -351,7 +356,23 @@ Run them with `pixi run python Scripts/<name>.py` (or the environment's own Pyth
      - Exercise 3 on the saved session 6 cells: 1,226 of 1,315 matched a reference cell by position; 6 cell types (no B, plasma or lymphatic cells in this tumour region).
      - scanpy turns string `obs` columns into categoricals behind the scenes, so `cell_type_map()` converts to `object` before `fillna`.
      - **Next:** replace the stand-in reference with the instructors' QuPath export; time a run on a laptop-class machine; settle the Day 1 session 4 export (see Decisions).
-   - Exercise/solution sync: the solution notebook is the source. Edit both versions the same way, and run `Scripts/check_exercises.py` afterwards. (Notebook 07 was generated from a builder script in the session scratchpad; treat the solution notebook as its source from now on.)
+   - **08 drafted; the solution runs end to end (2026-11-17).** Files: `notebooks/08_spatial_and_next_steps.ipynb` and `solutions/08_spatial_and_next_steps.ipynb` (34 cells; 3 exercise cells). On the 32 GB Xeon desktop it took 41 s, peak 0.7 GB. All figures were checked.
+     - **Inputs:** the workshop Zarr (10x's cells: `protein` table, `obsm["spatial"]` already in crop-local µm, `cell_boundaries`, `pathology_annotations`) and `../data/session7_cell_types.csv`. If the CSV is missing, it falls back to the reference phenotypes (`qupath/xenium_rcc_crop_10x_phenotypes.geojson`, classes joined by 10x ID) and says so. The fallback path hasn't been run.
+     - Sections:
+       1. Neighbours: `sq.gr.spatial_neighbors_delaunay` (squidpy 1.8.4; the older `spatial_neighbors(..., delaunay=True)` is deprecated and goes in 1.9), the edge-length histogram, then `remove_long_edges()` by hand at `MAX_EDGE_UM = 30` (the text mentions `radius=` as the built-in alternative). Linked to QuPath's Delaunay clustering. Exercise 1 counts the long edges and maps them.
+       2. `sq.gr.nhood_enrichment` (200 permutations, `rng=0`, about 2 s; squidpy 1.8.4 takes `rng`, not `seed`) as an annotated z-score heatmap; `sq.gr.co_occurrence` (10–200 µm, about 1 s) with a `plot_co_occurrence()` helper. Exercise 2 plots two more cell types.
+       3. Niches: the composition of each cell's 50 µm neighbourhood (`NearestNeighbors.radius_neighbors`), k-means with 6 niches, a profile heatmap, side-by-side maps, then a comparison with the pathology annotations (each cell's centre by `sjoin`; crosstab + ARI). Exercise 3 varies the radius and the number of niches.
+       4. CellSurvey's communities: the same method as upstream `network_analysis.py` (Delaunay ≤ 50 µm, edge weight 1 + correlation of arcsinh(x/5) protein profiles, `nx.community.louvain_communities`, seed 42), at resolutions 0.1 and 0.01.
+       5. Back to QuPath: `../data/session8_cells.geojson`, with 10x's outlines in pixels as detections, classification = cell type (with colour), `measurements` = Niche and Community (resolution 0.1) for QuPath's measurement maps. 14,261 cells, about 5 s. Not yet imported into QuPath.
+       6. Evaluating new tools: a 7-question checklist and a table of tools by step, drawn from upstream CellSurvey's survey (InstanSeg, Cellpose, segger, Baysor, Proseg, Sopa, SegTraQ, CELESTA, Novae, SACCELERATOR, PANORAMIC, VALIS, LazySlide, napari-spatialdata, CellSurvey). A discussion, not a coding exercise.
+     - **Results (session 7's 9 RNA cell types, 14,261 cells):**
+       - Delaunay: 42,754 edges, median 11.6 µm, longest 1,021 µm (across vessels and gaps). Over 20 / 30 / 50 / 100 µm: 14.5% / 3.2% / 0.8% / 0.3%. After the 30 µm cut: 41,366 edges, median 6 neighbours, no isolated cells.
+       - Enrichment z-scores: the diagonal is strongly positive (B cell 141, Tumour 71, Lymphatic endothelium 49); blood endothelium–smooth muscle +34 (vessels); fibroblast–lymphatic endothelium +15; T cell–Tumour −11; T cell–Macrophage +3.
+       - Co-occurrence near tumour: tumour 6.8× chance at 10–20 µm, falling to 2.6× at 200 µm; macrophages and smooth muscle above 1; B cells about 0.02 and plasma cells about 0.1.
+       - Niches (50 µm, k = 6) map onto the tissue: B-cell follicles, T-cell zones and a fibroblast/lymphatic stroma niche in and around Immune infiltration; tumour-rich and vascular (smooth muscle + endothelium + macrophage + tumour) niches in Tumor. ARI against the annotations 0.30. Exercise 3: 25 µm 0.19, 100 µm 0.53, k = 4 0.51, k = 10 0.24.
+       - Louvain: resolution 0.1 gives 8 communities (largest 2,653) with ARI 0.27, and cuts the fairly uniform tumour into large left/right patches, a boundary the cell types don't show (the notebook asks about it). Resolution 0.01 gives 3 communities (8,594, 5,665 and 2 cells) with ARI 0.63, matching the annotations best of all. The 2-cell communities are isolated cells.
+     - The notebook was drafted from a percent-format script in the session scratchpad; the solution notebook is the source from now on.
+   - Exercise/solution sync: the solution notebook is the source. Edit both versions the same way, and run `Scripts/check_exercises.py` afterwards. (Notebooks 07 and 08 were generated from builder scripts in the session scratchpad; treat the solution notebooks as their source from now on.)
    - Structure, before the 2026-11-16 restructure (see above for the current one): (1) choose a 440 µm region (`REGION = [530, 530, 970, 970]` µm, about 1,200 cells) with `bounding_box_query` in `microns`, copied into a new in-memory `SpatialData`; (2) 10x's segmentation (`segmentation_method`, a 100 µm zoom with DAPI and the boundary stain); (3) InstanSeg via Sopa with DAPI only, then DAPI + `ATP1A1/CD45/E-Cadherin` (exercise 1), plus `target="nuclei"`; (4) `sopa.aggregate` with `key_added="instanseg_table"` and both filters at 0, then `sopa.spatial.assign_transcript_to_cell`; (5) SegTraQ baseline and region similarity for 10x vs InstanSeg; (6) exercise 2: grow the outlines with `sopa.shapes.expand_radius(..., 0.5, no_overlap=True)` and remeasure.
    - **Region or whole crop (decided 2026-11-15):** the setup cell has `WHOLE_CROP = False`. When it's `True`, section 1 sets `REGION` to the whole crop (from the image size), and the *whole* session runs on it unchanged: segmentation, aggregation, SegTraQ and the exercises. This replaced a separate section 7 that only segmented the whole crop and compared cell counts. A whole-crop run means 3 InstanSeg runs of about 6 min each on the desktop, plus SegTraQ on about 16,000 cells (region similarity took about 20 s for 1,200 cells), so expect 30 min or more on a laptop. Not yet timed; memory at that scale is also untested.
    - Exercise/solution check: comparing the two notebooks cell by cell, they should differ only in the two exercise cells (`# Your code here`). Check this after every edit.
@@ -373,6 +394,43 @@ Run them with `pixi run python Scripts/<name>.py` (or the environment's own Pyth
 5. **Day 1**: port the QuPath exercises to the RCC data and write the `Pages/Day1/` guides (QuPath GUI work, led by the instructors).
    - **Session 4 must end with exporting the classified cells** as `data/day1_cells.geojson` (see the session 7 decision). The instructors also make the reference phenotype file for 10x's cells.
    - **Adapt the IF exercise's markers to RCC.** PanCK is sparse and patchy in the workshop crop (common in RCC), so it won't separate tumour from stroma the way it did in the lung image. Choose more suitable markers instead (candidates to check in QuPath: E-Cadherin, Beta-catenin, Vimentin, CD31, alphaSMA).
+
+## Remaining work
+Compiled 2026-11-17, when the first full draft of Day 2 was finished. Detail for each item is under Order of work and Decisions made. `README.md` has a short version for readers of the repo; keep the two in step.
+
+**Data and release** (maintainer, on the HPC)
+1. Rerun the preparation notebook on the HPC, so the bundle includes `<NAME>_fovs.geojson`. (The README it writes into the bundle mentions the file since 2026-11-17.)
+2. Upload the bundle to Zenodo, including the instructors' reference phenotypes once they exist (item 9).
+3. Add the Zenodo link to `README.md` and `Pages/Installation-Instructions.md`, saying the data goes in the workshop folder's `data/` (with `qupath/` inside it).
+
+**Day 2 notebooks**
+4. The maintainer reads through all four notebooks (in progress from 2026-11-17).
+5. Session 5: check the CD3E and CD68 thresholds by eye at full resolution, and fix the small leftovers (the slider starts at Otsu's value; saving the GeoJSON prints a geopandas "'crs' was not provided" warning).
+6. Import the saved GeoJSON files into QuPath to confirm they load: `session5_cells.geojson`, and `session8_cells.geojson` with its Niche/Community measurement maps.
+7. Time all four notebooks on a laptop-class machine (8–16 GB) with memory free, plus session 6's `WHOLE_CROP` mode, which has never been timed.
+8. Run session 8's fallback path (no `session7_cell_types.csv`), and session 7's fallbacks, at least once.
+9. Decide whether the solution notebooks ship with outputs (see Open questions).
+
+**Day 1** (maintainer and instructors)
+10. Make the real reference phenotypes in QuPath (10x's cells, classified and exported with each cell's 10x ID as its name), replacing the stand-in from `make_reference_phenotypes.py`.
+11. Port Sara's exercises to the RCC data, using markers other than PanCK, and write the `Pages/Day1/` guides.
+12. Make sure Day 1 session 4 ends by exporting the classified cells as `data/day1_cells.geojson` (FeatureCollection, with classifications, covering the session 6 region).
+13. Copy only classifiers and class lists from `qupath_content/` into `qupath/`.
+
+**Installation and environment**
+14. Run `pixi run check-full` on an Apple Silicon Mac and on Linux (Bio-Formats is untested on both, and everything is untested on macOS).
+15. Add the organisers' contact details to the installation page.
+16. At least a month before the workshop, follow "Updating package versions", including lifting the `spatialdata <0.9` pin.
+
+**Workshop page and logistics**
+17. Fill in `README.md`: instructors, venue, slides, registration and FAQ.
+18. Write the slides (Google Drive), including the spatial-biology primer for Day 1 session 1.
+19. Find out where the original liver `.vsi` and lung TIFF images came from, and whether they may be shared (the maintainer is enquiring). This only matters if any of them stay in Day 1.
+
+**Housekeeping**
+20. Bring the shared plan doc up to date with this file, or retire it and point to this file instead.
+21. Replace the two CellSurvey figures in `assets/` with figures from the workshop data.
+22. Optionally, add `Pages/Data.md` describing the bundle's contents.
 
 ## Open questions
 - Does QuPath ignore OME `Plane PositionX/PositionY`? Believed so; it doesn't matter under option A.
