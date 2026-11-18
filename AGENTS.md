@@ -119,7 +119,7 @@ The workshop environment is `pixi.toml` + `pixi.lock`, locked for linux-64, win-
     - **Day 1 session 4** must have participants export their classified cells from QuPath as GeoJSON (File › Export objects as GeoJSON, "Export as FeatureCollection"), saved as `data/day1_cells.geojson` in the workshop folder. Their cells must have classifications, and must cover the session 6 region (x 820–1260, y 720–1160 µm), for the matching to be useful.
     - **The instructors** must make the reference file `qupath/xenium_rcc_crop_10x_phenotypes.geojson` in QuPath: import `xenium_rcc_crop_10x_cells.geojson` into the IF image, add intensity features, classify with single-measurement classifiers combined into a composite classifier, and export as GeoJSON. It must keep each cell's `name` (its 10x ID). It then goes into the Zenodo bundle. Until then, `Scripts/make_reference_phenotypes.py` writes a **stand-in** of the same shape (see Notebook tools).
 
-- **The repo is published as a GitHub Pages site** (decided 2026-11-18), at `https://franciscrickinstitute.github.io/spatial-bio-training/`, with the README as its home page, like introduction-to-image-analysis. `_config.yml` sets it up:
+- **The repo is published as a GitHub Pages site** (decided 2026-11-18; live the same day), at https://franciscrickinstitute.github.io/spatial-bio-training/, with the README as its home page, like introduction-to-image-analysis. `_config.yml` sets it up:
   - **Theme:** Just the Docs, as a remote theme pinned to `v0.12.0` (`remote_theme: just-the-docs/just-the-docs@v0.12.0`, plugins `jekyll-remote-theme` and `jekyll-include-cache`). It builds with GitHub's standard "Deploy from a branch", with no Actions workflow. Update the pin deliberately.
   - **Navigation:** titles and order come from `defaults:` in `_config.yml` (README = "Home", installation page = "Installation"), not from front matter, because GitHub shows front matter as a table at the top of a file. Add new pages (e.g. `Pages/Day1/...`) to `defaults:` the same way. The notebooks and solutions are external navigation links to GitHub.
   - **Excluded from the site:** `AGENTS.md`, `CLAUDE.md`, `Scripts/`, `notebooks/`, `solutions/`, `assets/`, `data/`, `qupath_content/`, the pixi files and `requirements.txt`. If the README starts using images from `assets/`, take `assets/` out of the exclude list.
@@ -444,7 +444,14 @@ Compiled 2026-11-17, when the first full draft of Day 2 was finished. Detail for
 22. Optionally, add `Pages/Data.md` describing the bundle's contents (and add it to `defaults:` in `_config.yml`).
 
 **Website (GitHub Pages)**
-23. Enable Pages (Settings › Pages › Deploy from a branch › `main` / (root)), check that the site builds, and add its address to the repo's About box. Then click through: the navigation, the home page's links to the installation page and the notebooks, and the anchor links in the installation page (especially `#certificate-errors-unknownissuer-certificate_verify_failed`). If the remote theme fails to build, switch to just-the-docs' GitHub Actions workflow (see the just-the-docs template repo).
+23. **Mostly done (2026-11-18): the site is live** at https://franciscrickinstitute.github.io/spatial-bio-training/ (remote theme built fine). Checked by fetching the pages:
+    - navigation (Home, Installation, Day 2 notebooks, Solutions) and the "View on GitHub" link;
+    - search;
+    - the notebook links (GitHub blob URLs) and the README → Installation link (converted to `/spatial-bio-training/Pages/Installation-Instructions.html`);
+    - the installation page's anchors, which match its heading IDs, including `#certificate-errors-unknownissuer-certificate_verify_failed`;
+    - `AGENTS.html` and `notebooks/*.ipynb` return 404, as intended.
+
+    Still to do: check the look in a browser (the fetch tool can't show whether the tables and the "Note:" blockquote render), and add the address to the repo's About box.
 
 ## Open questions
 - Does QuPath ignore OME `Plane PositionX/PositionY`? Believed so; it doesn't matter under option A.
