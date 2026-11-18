@@ -1,0 +1,54 @@
+# GitHub Pages site for the workshop: https://franciscrickinstitute.github.io/spatial-bio-training/
+# Publish with Settings › Pages › Deploy from a branch › main / (root). The README is the home page.
+#
+# Theme: Just the Docs (https://just-the-docs.com), loaded as a remote theme and pinned to a release,
+# so the site only changes when the version here is changed.
+title: Spatial Biology Workshop
+description: A two-day workshop on analysing spatial biology data, in QuPath and Python
+remote_theme: just-the-docs/just-the-docs@v0.12.0
+plugins:
+  - jekyll-remote-theme
+  - jekyll-include-cache  # used by the theme's layouts
+
+color_scheme: light
+search_enabled: true
+heading_anchors: true
+aux_links:
+  "View on GitHub": "https://github.com/FrancisCrickInstitute/spatial-bio-training"
+aux_links_new_tab: true
+
+# The notebooks are linked on GitHub, which shows them properly; Pages would serve the raw files.
+nav_external_links:
+  - title: Day 2 notebooks
+    url: https://github.com/FrancisCrickInstitute/spatial-bio-training/tree/main/notebooks
+  - title: Solutions
+    url: https://github.com/FrancisCrickInstitute/spatial-bio-training/tree/main/solutions
+
+# Titles and navigation order, set here rather than in the files, so the Markdown stays clean on GitHub
+# (GitHub shows front matter as a table at the top of a file).
+defaults:
+  - scope:
+      path: "README.md"
+    values:
+      title: Home
+      nav_order: 1
+  - scope:
+      path: "Pages/Installation-Instructions.md"
+    values:
+      title: Installation
+      nav_order: 2
+
+# Not part of the website: maintainer notes, code, environment files and local data
+exclude:
+  - AGENTS.md
+  - CLAUDE.md
+  - Scripts/
+  - notebooks/
+  - solutions/
+  - assets/
+  - data/
+  - qupath_content/
+  - pixi.toml
+  - pixi.lock
+  - requirements.txt
+  - .pixi/

@@ -119,6 +119,16 @@ The workshop environment is `pixi.toml` + `pixi.lock`, locked for linux-64, win-
     - **Day 1 session 4** must have participants export their classified cells from QuPath as GeoJSON (File › Export objects as GeoJSON, "Export as FeatureCollection"), saved as `data/day1_cells.geojson` in the workshop folder. Their cells must have classifications, and must cover the session 6 region (x 820–1260, y 720–1160 µm), for the matching to be useful.
     - **The instructors** must make the reference file `qupath/xenium_rcc_crop_10x_phenotypes.geojson` in QuPath: import `xenium_rcc_crop_10x_cells.geojson` into the IF image, add intensity features, classify with single-measurement classifiers combined into a composite classifier, and export as GeoJSON. It must keep each cell's `name` (its 10x ID). It then goes into the Zenodo bundle. Until then, `Scripts/make_reference_phenotypes.py` writes a **stand-in** of the same shape (see Notebook tools).
 
+- **The repo is published as a GitHub Pages site** (decided 2026-11-18), at `https://franciscrickinstitute.github.io/spatial-bio-training/`, with the README as its home page, like introduction-to-image-analysis. `_config.yml` sets it up:
+  - **Theme:** Just the Docs, as a remote theme pinned to `v0.12.0` (`remote_theme: just-the-docs/just-the-docs@v0.12.0`, plugins `jekyll-remote-theme` and `jekyll-include-cache`). It builds with GitHub's standard "Deploy from a branch", with no Actions workflow. Update the pin deliberately.
+  - **Navigation:** titles and order come from `defaults:` in `_config.yml` (README = "Home", installation page = "Installation"), not from front matter, because GitHub shows front matter as a table at the top of a file. Add new pages (e.g. `Pages/Day1/...`) to `defaults:` the same way. The notebooks and solutions are external navigation links to GitHub.
+  - **Excluded from the site:** `AGENTS.md`, `CLAUDE.md`, `Scripts/`, `notebooks/`, `solutions/`, `assets/`, `data/`, `qupath_content/`, the pixi files and `requirements.txt`. If the README starts using images from `assets/`, take `assets/` out of the exclude list.
+  - **Rules for Markdown that appears on the site** (README and `Pages/`):
+    - Link notebooks, folders and excluded files with full GitHub URLs (`https://github.com/FrancisCrickInstitute/spatial-bio-training/blob/main/...`). Pages would serve `.ipynb` files raw, and has no folder listings.
+    - Relative links between `.md` pages are fine, because GitHub Pages converts them to the rendered pages.
+    - Don't use GitHub-only syntax, such as alert blocks (`> [!NOTE]`), which show as literal text.
+    - Keep maintainer-only content (to-do lists, HPC paths) out of the README; it belongs here.
+
 ## Programme (4 sessions/day, 09:30–17:00)
 | Day 1 (QuPath) | Day 2 (Python) |
 |---|---|
@@ -187,7 +197,8 @@ The workshop environment is `pixi.toml` + `pixi.lock`, locked for linux-64, win-
 
 ## Target layout
 ```
-README.md            workshop page (overview, registration, instructors, preparation, programme, venue, slides, FAQ)
+README.md            workshop page (overview, registration, instructors, preparation, programme, venue, slides, FAQ); the website's home page
+_config.yml          GitHub Pages / Just the Docs settings (see Decisions made)
 Pages/               Installation-Instructions.md, Data.md, Day1/ (session guides), Day2/
 qupath/              Day 1 classifiers + class lists (no project: participants build their own)
 notebooks/           05_from_qupath_to_python, 06_segmentation_and_qc, 07_cell_types, 08_spatial_and_next_steps
@@ -396,7 +407,7 @@ Run them with `pixi run python Scripts/<name>.py` (or the environment's own Pyth
    - **Adapt the IF exercise's markers to RCC.** PanCK is sparse and patchy in the workshop crop (common in RCC), so it won't separate tumour from stroma the way it did in the lung image. Choose more suitable markers instead (candidates to check in QuPath: E-Cadherin, Beta-catenin, Vimentin, CD31, alphaSMA).
 
 ## Remaining work
-Compiled 2026-11-17, when the first full draft of Day 2 was finished. Detail for each item is under Order of work and Decisions made. `README.md` has a short version for readers of the repo; keep the two in step.
+Compiled 2026-11-17, when the first full draft of Day 2 was finished. Detail for each item is under Order of work and Decisions made. (A short copy in `README.md` was removed on 2026-11-18, because the README is now the public website's home page; this list is the only one.)
 
 **Data and release** (maintainer, on the HPC)
 1. Rerun the preparation notebook on the HPC, so the bundle includes `<NAME>_fovs.geojson`. (The README it writes into the bundle mentions the file since 2026-11-17.)
@@ -430,7 +441,10 @@ Compiled 2026-11-17, when the first full draft of Day 2 was finished. Detail for
 **Housekeeping**
 20. Bring the shared plan doc up to date with this file, or retire it and point to this file instead.
 21. Replace the two CellSurvey figures in `assets/` with figures from the workshop data.
-22. Optionally, add `Pages/Data.md` describing the bundle's contents.
+22. Optionally, add `Pages/Data.md` describing the bundle's contents (and add it to `defaults:` in `_config.yml`).
+
+**Website (GitHub Pages)**
+23. Enable Pages (Settings › Pages › Deploy from a branch › `main` / (root)), check that the site builds, and add its address to the repo's About box. Then click through: the navigation, the home page's links to the installation page and the notebooks, and the anchor links in the installation page (especially `#certificate-errors-unknownissuer-certificate_verify_failed`). If the remote theme fails to build, switch to just-the-docs' GitHub Actions workflow (see the just-the-docs template repo).
 
 ## Open questions
 - Does QuPath ignore OME `Plane PositionX/PositionY`? Believed so; it doesn't matter under option A.

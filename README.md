@@ -1,7 +1,6 @@
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/) [![Built with Pixi](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/prefix-dev/pixi/main/assets/badge/v0.json)](https://pixi.sh) ![GitHub](https://img.shields.io/github/license/FrancisCrickInstitute/spatial-bio-training?color=green&style=plastic)
 
-> [!NOTE]
-> This workshop is under development. Registration and materials will be added here as they are finalised.
+> **Note:** this workshop is under development. Registration and materials will be added here as they are finalised.
 
 **Dates:** 25–26 February 2027 · **Places:** 20–30 · **Bring your own laptop** (see [Preparation](#preparation))
 
@@ -52,12 +51,12 @@ You will work on your own laptop throughout: Windows, macOS on Apple Silicon (M1
 
 | Session | Topic | Notebook |
 |---|---|---|
-| 5 | From QuPath to Python: Jupyter notebooks, opening the Day 1 images, classic segmentation and simple classifiers | [05](notebooks/05_from_qupath_to_python.ipynb) |
-| 6 | The SpatialData data model, transcripts, deep-learning cell segmentation and quality control | [06](notebooks/06_segmentation_and_qc.ipynb) |
-| 7 | Cell types: clustering and comparison with Day 1 | [07](notebooks/07_cell_types.ipynb) |
-| 8 | Spatial statistics and niches, and where to go next | [08](notebooks/08_spatial_and_next_steps.ipynb) |
+| 5 | From QuPath to Python: Jupyter notebooks, opening the Day 1 images, classic segmentation and simple classifiers | [05](https://github.com/FrancisCrickInstitute/spatial-bio-training/blob/main/notebooks/05_from_qupath_to_python.ipynb) |
+| 6 | The SpatialData data model, transcripts, deep-learning cell segmentation and quality control | [06](https://github.com/FrancisCrickInstitute/spatial-bio-training/blob/main/notebooks/06_segmentation_and_qc.ipynb) |
+| 7 | Cell types: clustering and comparison with Day 1 | [07](https://github.com/FrancisCrickInstitute/spatial-bio-training/blob/main/notebooks/07_cell_types.ipynb) |
+| 8 | Spatial statistics and niches, and where to go next | [08](https://github.com/FrancisCrickInstitute/spatial-bio-training/blob/main/notebooks/08_spatial_and_next_steps.ipynb) |
 
-Completed versions of the notebooks are in [`solutions/`](solutions/).
+Completed versions of the notebooks are in [`solutions/`](https://github.com/FrancisCrickInstitute/spatial-bio-training/tree/main/solutions). You'll run the notebooks on your own laptop during the workshop, from the workshop folder you download in [Preparation](#preparation).
 
 # Venue
 
@@ -76,14 +75,3 @@ TBC
 
 TBC
 
-# Development status
-
-*For the organisers; this section will be removed before the workshop.* The full list, with details, is under "Remaining work" in [`AGENTS.md`](AGENTS.md).
-
-All four Day 2 notebooks are drafted and run end to end; they are being tested. Still to do:
-
-- **Data:** rerun the preparation notebook (it now also exports the fields of view), upload the bundle to Zenodo, and add the link to this page and the installation instructions.
-- **Day 2:** finish reviewing the notebooks; time them on a typical laptop; check the exported GeoJSON files in QuPath; decide whether the solutions are published with outputs.
-- **Day 1:** port the QuPath exercises to this dataset and write the session guides; make the reference cell phenotypes in QuPath; end session 4 with the export that session 7 uses.
-- **Installation:** test on macOS (Apple Silicon) and Linux; add the organisers' contact details; update the package versions about a month before the workshop.
-- **This page:** instructors, venue, slides, registration and FAQ.
