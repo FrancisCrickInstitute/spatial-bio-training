@@ -127,6 +127,7 @@ The workshop environment is `pixi.toml` + `pixi.lock`, locked for linux-64, win-
     - Link notebooks, folders and excluded files with full GitHub URLs (`https://github.com/FrancisCrickInstitute/spatial-bio-training/blob/main/...`). Pages would serve `.ipynb` files raw, and has no folder listings.
     - Relative links between `.md` pages are fine, because GitHub Pages converts them to the rendered pages.
     - Don't use GitHub-only syntax, such as alert blocks (`> [!NOTE]`), which show as literal text.
+    - Jekyll runs every published page through Liquid, **including the text inside code blocks**, so `{{ ... }}` and `{% ... %}` are processed (or vanish) on the site while looking fine on GitHub. Wrap any code that contains them (for example Python with doubled braces in an f-string) in `{% raw %}` ... `{% endraw %}`.
     - Keep maintainer-only content (to-do lists, HPC paths) out of the README; it belongs here.
 
 ## Programme (4 sessions/day, 09:30–17:00)
