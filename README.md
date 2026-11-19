@@ -58,3 +58,7 @@ Completed versions of the notebooks are in [`solutions/`](https://github.com/Fra
 
 - [CellSurvey](https://github.com/FrancisCrickInstitute/CellSurvey): a pipeline that runs the Day 2 analysis end to end, built on [Sopa](https://prism-oncology.github.io/sopa).
 - [Introduction to image analysis](https://github.com/FrancisCrickInstitute/introduction-to-image-analysis): our general image-analysis workshop.
+
+## Licence
+
+The workshop material in this repository is licensed under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/): you may share and adapt it, with credit, as long as you share your version under the same licence. The dataset is 10x Genomics' and keeps its own licence, [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
