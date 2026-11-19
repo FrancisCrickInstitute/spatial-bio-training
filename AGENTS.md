@@ -198,7 +198,7 @@ The workshop environment is `pixi.toml` + `pixi.lock`, locked for linux-64, win-
 
 ## Target layout
 ```
-README.md            workshop page (overview, registration, instructors, preparation, programme, venue, slides, FAQ); the website's home page
+README.md            workshop page (overview, registration, preparation, programme, additional material); the website's home page
 _config.yml          GitHub Pages / Just the Docs settings (see Decisions made)
 Pages/               Installation-Instructions.md, Data.md, Day1/ (session guides), Day2/
 qupath/              Day 1 classifiers + class lists (no project: participants build their own)
@@ -435,7 +435,7 @@ Compiled 2026-11-17, when the first full draft of Day 2 was finished. Detail for
 16. At least a month before the workshop, follow "Updating package versions", including lifting the `spatialdata <0.9` pin.
 
 **Workshop page and logistics**
-17. Fill in `README.md`: instructors, venue, slides, registration and FAQ.
+17. Fill in `README.md`: instructors, venue, slides, registration and FAQ. The empty "TBC" sections for instructors, venue, slides and FAQ were removed on 2026-11-19, before the site was shared with colleagues; add each back as a `##` section once there is content, and update the note at the top.
 18. Write the slides (Google Drive), including the spatial-biology primer for Day 1 session 1.
 19. Find out where the original liver `.vsi` and lung TIFF images came from, and whether they may be shared (the maintainer is enquiring). This only matters if any of them stay in Day 1.
 

@@ -1,4 +1,4 @@
-# Preparation for the Spatial Biology Workshop
+# Installation instructions
 
 Please complete these steps **before the workshop**, on the laptop you will bring. Installation downloads several gigabytes, so use a good internet connection, preferably **not** over a VPN (see [Troubleshooting](#troubleshooting)).
 

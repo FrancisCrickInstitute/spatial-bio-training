@@ -1,14 +1,16 @@
+# Spatial Biology Workshop
+
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/) [![Built with Pixi](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/prefix-dev/pixi/main/assets/badge/v0.json)](https://pixi.sh) ![GitHub](https://img.shields.io/github/license/FrancisCrickInstitute/spatial-bio-training?color=green&style=plastic)
 
-> **Note:** this workshop is under development. Registration and materials will be added here as they are finalised.
+> **Note:** this workshop is under development. Registration, instructors, venue, slides and the workshop data will be added here as they are finalised.
 
 **Dates:** 25–26 February 2027 · **Places:** 20–30 · **Bring your own laptop** (see [Preparation](#preparation))
 
-# Overview
+## Overview
 
 A two-day, hands-on workshop on analysing spatial biology data. **Day 1** uses [QuPath](https://qupath.github.io/) to explore, segment and classify cells interactively. **Day 2** rebuilds the same analysis in **Python**, then goes further with transcripts, segmentation quality control and spatial statistics.
 
-Both days use the same public tissue section, which has multiplex immunofluorescence (protein), H&E and in situ transcript data.
+Both days use the same public tissue section, which has multiplex immunofluorescence (protein), H&E and in situ transcript data: a region of 10x Genomics' [Xenium In Situ Gene and Protein Expression data for FFPE Human Renal Cell Carcinoma](https://www.10xgenomics.com/datasets/xenium-protein-ffpe-human-renal-carcinoma), used under the [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) licence.
 
 By the end of the workshop you should be able to:
 
@@ -20,25 +22,19 @@ By the end of the workshop you should be able to:
 
 The workshop will not analyse your own data. Its aim is to give you enough grounding to choose the right tools for your data, and to ask the right questions when evaluating new ones.
 
-# Registration
+## Registration
 
 Registration is by application and is not yet open. The application form asks about your research and what you hope to get from the workshop.
 
-# Instructors
+## Preparation
 
-TBC
+You will work on your own laptop throughout: Windows, macOS on Apple Silicon (M1 or later) or Linux, with at least 8 GB of memory. You do not need a GPU.
 
-# Preparation
+Before the workshop, follow the [installation instructions](Pages/Installation-Instructions.md) to install QuPath and the Python environment, check that everything works, and download the workshop data.
 
-You will work on your own laptop throughout: Windows, macOS on Apple Silicon (M1 or later) or Linux. You do not need a GPU. Before the workshop:
+## Programme
 
-1. Install QuPath and the Python environment, following the [installation instructions](Pages/Installation-Instructions.md). The Python environment works on Windows, Linux and macOS (Apple Silicon).
-2. From the repository folder, check the Python environment with `pixi run check-full`. This also downloads the cell segmentation model, so run it with an internet connection and preferably off any VPN.
-3. Download the workshop data (link to follow).
-
-# Program
-
-## Day 1: spatial biology in QuPath
+### Day 1: spatial biology in QuPath
 
 | Session | Topic |
 |---|---|
@@ -47,7 +43,7 @@ You will work on your own laptop throughout: Windows, macOS on Apple Silicon (M1
 | 3 | Multiplex IF workflow: cell segmentation with InstanSeg, cell classification, phenotypes |
 | 4 | Spatial analysis in QuPath, and exporting results for Day 2 |
 
-## Day 2: spatial omics in Python
+### Day 2: spatial omics in Python
 
 | Session | Topic | Notebook |
 |---|---|---|
@@ -58,20 +54,7 @@ You will work on your own laptop throughout: Windows, macOS on Apple Silicon (M1
 
 Completed versions of the notebooks are in [`solutions/`](https://github.com/FrancisCrickInstitute/spatial-bio-training/tree/main/solutions). You'll run the notebooks on your own laptop during the workshop, from the workshop folder you download in [Preparation](#preparation).
 
-# Venue
-
-TBC
-
-# Slides
-
-TBC
-
-# Additional material
+## Additional material
 
 - [CellSurvey](https://github.com/FrancisCrickInstitute/CellSurvey): a pipeline that runs the Day 2 analysis end to end, built on [Sopa](https://prism-oncology.github.io/sopa).
 - [Introduction to image analysis](https://github.com/FrancisCrickInstitute/introduction-to-image-analysis): our general image-analysis workshop.
-
-# FAQ
-
-TBC
-
